@@ -1,0 +1,12 @@
+# Ollama API Key
+# Generated: 2026-08-06
+# Account: respati1 (respati1@bozztirex.us)
+# Free tier: Light usage, session limits reset every 5 hours
+
+OLLAMA_API_KEY=16cb4f6866814f1abc6ac8b326f9d757.yHE0OLddJ_VsohrhGhFhPpe0
+
+# Usage:
+# curl https://api.ollama.com/v1/chat/completions \
+#   -H "Authorization: Bearer 16cb4f6866814f1abc6ac8b326f9d757.yHE0OLddJ_VsohrhGhFhPpe0" \
+#   -H "Content-Type: application/json" \
+#   -d '{"model": "gpt-oss:20b", "messages": [{"role": "user", "content": "Hello"}]}'

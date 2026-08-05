@@ -1,0 +1,44 @@
+[
+  {
+    "name": "ph_phc_ocb8DVwHm1L390MqB4lTLqL5GsA4hAi5sjpLBU1ZtR6_posthog",
+    "value": "%7B%22%24device_id%22%3A%22019fd29c-b285-7dff-ad2e-41ecb01b4924%22%2C%22distinct_id%22%3A%22019fd29d-48fa-738b-8b69-2062b25087da%22%2C%22%24sesid%22%3A%5B1785944951046%2C%22019fd29d-4906-78e6-97cb-3e87e3103406%22%2C1785944951046%5D%2C%22%24session_is_sampled%22%3A%22019fd29d-4906-78e6-97cb-3e87e3103406%22%2C%22%24initial_person_info%22%3A%7B%22r%22%3A%22https%3A%2F%2Faccounts.google.com%2F%22%2C%22u%22%3A%22https%3A%2F%2Fadal.sylph.ai%2Fsign-in%2Fsso-callback%3Fsign_in_force_redirect_url%3Dhttps%253A%252F%252Fadal.sylph.ai%252Fdashboard%22%7D%2C%22%24user_state%22%3A%22anonymous%22%7D",
+    "domain": ".sylph.ai",
+    "path": "/",
+    "expires": 1817480955,
+    "size": 649,
+    "httpOnly": false,
+    "secure": true,
+    "session": false,
+    "sameSite": "Lax",
+    "priority": "Medium",
+    "sourceScheme": "Secure"
+  },
+  {
+    "name": "__client_uat",
+    "value": "0",
+    "domain": ".sylph.ai",
+    "path": "/",
+    "expires": 1820504951.019485,
+    "size": 13,
+    "httpOnly": false,
+    "secure": true,
+    "session": false,
+    "sameSite": "Lax",
+    "priority": "Medium",
+    "sourceScheme": "Secure"
+  },
+  {
+    "name": "__client_uat_kZUJ9hSg",
+    "value": "0",
+    "domain": ".sylph.ai",
+    "path": "/",
+    "expires": 1820504951.019549,
+    "size": 22,
+    "httpOnly": false,
+    "secure": true,
+    "session": false,
+    "sameSite": "Lax",
+    "priority": "Medium",
+    "sourceScheme": "Secure"
+  }
+]

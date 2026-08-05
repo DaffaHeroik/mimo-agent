@@ -1,0 +1,30 @@
+[
+  {
+    "name": "AUTH_SESSION_ID",
+    "value": "ded21d6b-1b15-4c21-968e-c8e1aebf13f6.keycloaky-6-61397",
+    "domain": "www.codebuddy.ai",
+    "path": "/auth/realms/copilot/",
+    "expires": -1,
+    "size": 69,
+    "httpOnly": true,
+    "secure": true,
+    "session": true,
+    "sameSite": "None",
+    "priority": "Medium",
+    "sourceScheme": "Secure"
+  },
+  {
+    "name": "KC_RESTART",
+    "value": "eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..y4CtcpHZNpInxpFHLJm-vA.xTMPouPw2B2bLGGlbocP8ub3ovD6ULeVpOA7SmumIJQbIhEoTeGgnFaa3WQBLpaenfUon92s654h1k5SVoVA21qGQlAk-K_j84RD866Qo8kCLGumSgfrVgLlvZc0lu869qYNS4QGbls2nSyzKY29r7AoL9nY-CGzWAQ1eCgofgg4reJ5q4WJqEEHYcdrGtvdWqQNGURxyHr4XIj6WWguHgte6uXeIUiZdd9C-kcpoDm6RKX8xVrkaAtc9IY5-_HI1J6qKaTWLq-MUZLckpG377DsXNB_k7GfJbbwaHiMPDN_z9xrKzLz8nucpOLbEN6K058BEfSWA346HUUVk1LhQG2UT1WIKfQHHSgeiCcRJzWBLSTDzHOTTf3AhsrvrgBeS6ESaok6p6C54m0OkpzmQJjuMX9rX6Qmj7o4ur8ddPzhvFtSSdLJWI-wpZW8bd613xQlhNYQzLHywVN_spikXD7pqbn1D91Lb3XEdqzuQobf4LyMKpX45G1unDjfr7YdlRxGNy2NEaSCo-RxchFQeEczfJec-DT2mc21bGj53QFv9sOddlpCIWW0-Q_U27i0J6O0KWQ1LPwBLS-fOJ3B-5WG6Mru0LZh_iYAVY6SVdqaDJ6vkUuuWFqTbEWLKZlUl7fMJdUdxeNmjBDjJvzIZZFDPbUUMQ0G5szSRSm6tHHXaNM3GwFu6z32HCDdHSFvo6Dg9S6E3KQmONka_--9MLbQPOepS8MIYY-dKIeyj8iGBE2Gyh5-n1-H6br_NCWuOUQMbNoBlo_bh7Od2PB7QYoG8uLb7WyvFGKx3Pl2ZjpYIrPz-Il05w3MQGYG97W8r6YQoF9xQrK0uy2CO5C6ZsQkipQY0o0huPEQowaC5x4_RoglltQi97Z8xZEw1iMng7pgdRIvKVQdX80Z30z9FTmRtBHczFl142niiPF8AkO3OMTYaTsAcTZhDjDRlQ0yyxEJSgcBAtL6yDbAW-YAD_f-O_Oil58uG8bU-u8oltdY5A53IqwsMJgrDQO3Ws0k3Z68YJFLivq-7VjOLBEJSpcbRF55y1VHqk1Q5uyoNkKC9uq0_d-80HQTtEyCjXqgyDwVqi2SNTO3w-RFsCQzbw.jnw6hPvwQngiEVFOduDGvQ",
+    "domain": "www.codebuddy.ai",
+    "path": "/auth/realms/copilot/",
+    "expires": -1,
+    "size": 1215,
+    "httpOnly": true,
+    "secure": true,
+    "session": true,
+    "sameSite": "None",
+    "priority": "Medium",
+    "sourceScheme": "Secure"
+  }
+]
