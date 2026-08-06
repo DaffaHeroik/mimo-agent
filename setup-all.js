@@ -1,19 +1,21 @@
 #!/usr/bin/env node
 // ============================================================
-//  All-In-One Setup — Qoder + Ollama
-//  1 proses → 2 output terpisah
+//  ALL-IN-ONE SETUP — Qoder Ecosystem
+//  1. Qoder CLI (login + verify)
+//  2. Ollama Cloud API (create key + test)
+//  3. Cline CLI (install + verify)
+//  4. Qoder Desktop (install + Xvfb + launch)
+//  5. Claim 800 Free Calls (guide)
 // ============================================================
 
-const inquirer = require('/home/work/.openclaw/tmp/node_modules/inquirer');
 const { execSync, spawn } = require('child_process');
-const puppeteer = require('/home/work/.openclaw/tmp/node_modules/puppeteer-extra');
-const StealthPlugin = require('/home/work/.openclaw/tmp/node_modules/puppeteer-extra-plugin-stealth');
-puppeteer.use(StealthPlugin());
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
+const http = require('http');
 
 const HOME = process.env.HOME;
-const PATH_STR = `${HOME}/.local/bin:${process.env.PATH}`;
+const WORKDIR = __dirname;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 const c = {
@@ -21,11 +23,6 @@ const c = {
   red: '\x1b[31m', grn: '\x1b[32m', yel: '\x1b[33m',
   blu: '\x1b[34m', cyn: '\x1b[36m', mag: '\x1b[35m',
 };
-
-function run(cmd, t = 15000) {
-  try { return execSync(cmd, { env: { ...process.env, PATH: PATH_STR }, encoding: 'utf-8', timeout: t }).trim(); }
-  catch { return null; }
-}
 
 function ok(m)   { console.log(`  ${c.grn}✔${c.r} ${m}`); }
 function err(m)  { console.log(`  ${c.red}✘${c.r} ${m}`); }
@@ -38,388 +35,380 @@ function banner(title, color) {
   console.log(`└──────────────────────────────────────────────┘${c.r}`);
 }
 
-async function clickBtn(page, ...texts) {
-  return page.evaluate((texts) => {
-    const btns = document.querySelectorAll('button, a, div[role="button"]');
-    for (const b of btns) {
-      const t = (b.textContent || '').trim().toLowerCase();
-      if (texts.some(x => t.includes(x.toLowerCase()))) { b.click(); return t; }
-    }
-    return null;
-  }, texts);
+function run(cmd, timeout = 15000) {
+  try {
+    return execSync(cmd, { encoding: 'utf-8', timeout, stdio: 'pipe' }).trim();
+  } catch { return null; }
 }
 
-function loadAccounts() {
-  const f = path.join(process.cwd(), 'accounts.txt');
-  if (!fs.existsSync(f)) return [];
-  return fs.readFileSync(f, 'utf-8').split('\n')
-    .filter(l => l.trim() && !l.startsWith('#'))
-    .map(l => { const [e, p] = l.split('|').map(s => s.trim()); return { email: e, password: p }; })
-    .filter(a => a.email && a.password);
+function runAsync(cmd, args, opts = {}) {
+  return new Promise((resolve) => {
+    const proc = spawn(cmd, args, { stdio: ['ignore', 'pipe', 'pipe'], ...opts });
+    let stdout = '', stderr = '';
+    proc.stdout.on('data', d => stdout += d.toString());
+    proc.stderr.on('data', d => stderr += d.toString());
+    proc.on('close', code => resolve({ code, stdout: stdout.trim(), stderr: stderr.trim() }));
+    setTimeout(() => { try { proc.kill(); } catch {} resolve({ code: -1, stdout: stdout.trim(), stderr: stderr.trim() }); }, opts.timeout || 15000);
+  });
 }
 
 // ============================================================
-//  QODER SETUP
+//  1. QODER CLI
 // ============================================================
-async function setupQoder(accounts) {
-  banner('QODER SETUP', c.cyn);
+async function setupQoderCli() {
+  banner('1. QODER CLI', c.cyn);
 
-  // Check CLI
-  info('Checking Qoder CLI...');
-  let cliVer = run('qodercli --version');
-  if (!cliVer) {
-    info('Installing...');
+  // Check/install CLI
+  let ver = run('qodercli --version');
+  if (!ver) {
+    info('Installing Qoder CLI...');
     run('curl -fsSL https://qoder.com/install | bash', 60000);
-    cliVer = run('qodercli --version');
-    if (!cliVer) { err('CLI install failed'); return null; }
+    ver = run('qodercli --version');
+    if (!ver) { err('CLI install failed'); return false; }
   }
-  ok(`Qoder CLI ${cliVer}`);
+  ok(`Qoder CLI ${ver}`);
 
   // Check login
-  let status = run('qodercli status');
+  const status = run('qodercli status');
   if (status && !status.includes('Not logged in')) {
     const email = status.match(/Email:\s*(.+)/)?.[1] || 'unknown';
-    ok(`Already logged in: ${email}`);
-    return { status: 'already_logged_in', email };
+    ok(`Logged in: ${email}`);
+    return true;
   }
 
-  // Login
-  if (accounts.length === 0) {
-    warn('No accounts.txt — skipping Qoder login');
-    return null;
-  }
-
-  const account = accounts[0];
-  info(`Logging in as ${account.email}...`);
-
-  // Start CLI login
-  const cliProc = spawn('qodercli', ['login'], {
-    stdio: ['pipe', 'pipe', 'pipe'],
-    env: { ...process.env, PATH: PATH_STR }
-  });
-
-  let loginUrl = '';
-  cliProc.stdout.on('data', d => {
-    const m = d.toString().match(/https:\/\/qoder\.com\/device\/selectAccounts\?[^\s]+/);
-    if (m) loginUrl = m[0];
-    if (d.toString().includes('Login successful')) ok('CLI: Login successful!');
-  });
-
-  for (let i = 0; i < 20; i++) { await sleep(500); if (loginUrl) break; }
-  if (!loginUrl) { err('No login URL'); cliProc.kill(); return null; }
-
-  // Browser OAuth
-  const browser = await puppeteer.launch({
-    executablePath: `${HOME}/.local/chrome/chrome`,
-    headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
-  });
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1280, height: 900 });
-
-  try {
-    await page.goto(loginUrl, { waitUntil: 'networkidle2', timeout: 30000 });
-    await sleep(2000);
-
-    // Google
-    info('Google login...');
-    const links = await page.$$('a');
-    for (const link of links) {
-      const text = await page.evaluate(el => el.textContent.trim(), link);
-      if (text.includes('Google')) { await link.click(); break; }
-    }
-    await sleep(8000);
-
-    // Email
-    let inp;
-    try { inp = await page.waitForSelector('input[type="email"]', { timeout: 5000 }); }
-    catch { inp = await page.$('input[type="text"]'); }
-    if (inp) {
-      await inp.click({ clickCount: 3 });
-      await inp.type(account.email, { delay: 60 });
-      await sleep(1000);
-      await clickBtn(page, 'next');
-      await sleep(5000);
-    }
-
-    // Password
-    try {
-      const pwd = await page.waitForSelector('input[type="password"]', { timeout: 10000 });
-      await pwd.click({ clickCount: 3 });
-      await pwd.type(account.password, { delay: 60 });
-      await sleep(1000);
-      await clickBtn(page, 'next');
-      await sleep(10000);
-    } catch (e) {}
-
-    // Consent
-    for (let i = 0; i < 8; i++) {
-      await sleep(2000);
-      const url = page.url();
-      if (url.includes('qoder.com') && !url.includes('sign-in')) break;
-      if (url.includes('oauth') || url.includes('consent')) {
-        await clickBtn(page, 'lanjutkan', 'continue', 'allow', 'accept');
-        await sleep(3000); continue;
-      }
-      if (url.includes('speedbump') || url.includes('workspacetermsofservice')) {
-        await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-        await sleep(1000);
-        await clickBtn(page, 'i understand', 'next', 'continue');
-        await sleep(3000); continue;
-      }
-      break;
-    }
-  } catch (e) {
-    err(`Qoder browser error: ${e.message}`);
-  }
-
-  await browser.close();
-  await Promise.race([new Promise(r => cliProc.on('close', r)), sleep(15000)]);
-  cliProc.kill();
-  await sleep(2000);
-
-  status = run('qodercli status');
-  if (status && !status.includes('Not logged in')) {
-    ok('Qoder LOGIN SUCCESS!');
-    return { status: 'success', email: account.email };
-  }
-
-  err('Qoder login failed');
-  return null;
+  warn('Not logged in — run: qodercli login');
+  return false;
 }
 
 // ============================================================
-//  OLLAMA SETUP
+//  2. OLLAMA CLOUD API
 // ============================================================
-async function setupOllama(accounts) {
-  banner('OLLAMA SETUP', c.mag);
+async function setupOllama() {
+  banner('2. OLLAMA CLOUD API', c.mag);
 
-  const browser = await puppeteer.launch({
-    executablePath: `${HOME}/.local/chrome/chrome`,
-    headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
-  });
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1280, height: 900 });
+  const keyFile = path.join(WORKDIR, 'ollama-key.txt');
 
-  let apiKey = null;
+  // Check if key exists
+  if (fs.existsSync(keyFile)) {
+    const content = fs.readFileSync(keyFile, 'utf-8');
+    const keyMatch = content.match(/Key:\s*(\S+)/);
+    if (keyMatch) {
+      const key = keyMatch[1];
+      // Test the key
+      info('Testing existing key...');
+      const test = run(`curl -sL -X POST "https://ollama.com/api/chat" -H "Authorization: Bearer ${key}" -H "Content-Type: application/json" -d '{"model":"gpt-oss:20b","messages":[{"role":"user","content":"Say OK"}],"stream":false}'`, 30000);
+      if (test && test.includes('message')) {
+        ok(`API key works: ${key.substring(0, 15)}...`);
+        return true;
+      }
+      warn('Existing key invalid, will create new one');
+    }
+  }
 
+  // Create new key via browser automation
+  info('Creating new API key...');
   try {
-    // Login
-    info('Opening Ollama...');
-    await page.goto('https://ollama.com/signin', { waitUntil: 'networkidle2', timeout: 30000 });
-    await sleep(3000);
+    const puppeteer = require('./node_modules/puppeteer-extra');
+    const StealthPlugin = require('./node_modules/puppeteer-extra-plugin-stealth');
+    puppeteer.use(StealthPlugin());
 
-    info('Google login...');
-    await page.evaluate(() => {
-      const links = document.querySelectorAll('a');
-      for (const l of links) { if (l.href.includes('Google')) { l.click(); return; } }
+    const browser = await puppeteer.launch({
+      executablePath: `${HOME}/.cache/puppeteer/chrome/linux-151.0.7922.71/chrome-linux64/chrome`,
+      headless: 'new',
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
     });
-    await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 15000 }).catch(() => {});
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1280, height: 900 });
+
+    // Login to Ollama via Google
+    await page.goto('https://ollama.com/signin', { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await sleep(3000);
+    await page.evaluate(() => {
+      for (const l of document.querySelectorAll('a')) {
+        if (l.href && l.href.includes('Google')) { l.click(); return; }
+      }
+    });
+    await page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
     await sleep(5000);
 
-    // Email
-    info('Email...');
-    await page.focus('#identifierId').catch(() => page.focus('input[type="text"]').catch(() => {}));
-    await sleep(300);
-    await page.keyboard.type('respati1@bozztirex.us', { delay: 80 });
-    await sleep(1000);
-    await page.keyboard.press('Enter');
-    await sleep(6000);
+    // Google OAuth
+    try {
+      await page.waitForSelector('#identifierId', { timeout: 8000 });
+      await page.click('#identifierId', { clickCount: 3 });
+      await page.type('#identifierId', 'respati1@bozztirex.us', { delay: 50 });
+      await sleep(500);
+      await page.keyboard.press('Enter');
+      await sleep(6000);
+    } catch {}
 
-    // Password
-    info('Password...');
-    await page.focus('input[type="password"]').catch(() => {});
-    await sleep(300);
-    await page.keyboard.type('Daffa112233', { delay: 80 });
-    await sleep(1000);
-    await page.keyboard.press('Enter');
-    await sleep(10000);
+    try {
+      await page.waitForSelector('input[type="password"]', { timeout: 8000 });
+      await page.click('input[type="password"]', { clickCount: 3 });
+      await page.type('input[type="password"]', 'Daffa112233', { delay: 50 });
+      await sleep(500);
+      await page.keyboard.press('Enter');
+      await sleep(10000);
+    } catch {}
 
-    // Consent
-    for (let i = 0; i < 8; i++) {
-      await sleep(3000);
+    // Consent/speedbump
+    for (let i = 0; i < 10; i++) {
+      await sleep(2000);
       const url = page.url();
-      if (url.includes('ollama.com') && !url.includes('signin') && !url.includes('auth')) {
-        ok('Ollama LOGIN SUCCESS!');
-        break;
-      }
-      if (url.includes('accounts.google.com')) {
-        await clickBtn(page, 'lanjutkan', 'continue', 'allow');
-        continue;
-      }
+      if (url.includes('ollama.com') && !url.includes('signin') && !url.includes('auth')) break;
       if (url.includes('speedbump')) {
         await page.evaluate(() => { window.scrollTo(0, document.body.scrollHeight); });
         await sleep(1000);
-        await clickBtn(page, 'i understand', 'next', 'continue');
-        continue;
+        await page.evaluate(() => { for (const b of document.querySelectorAll('button')) if (b.textContent.toLowerCase().match(/i understand|next|continue/)) { b.click(); return; } });
+        await sleep(3000); continue;
       }
-      break;
+      if (url.includes('accounts.google.com')) {
+        await page.evaluate(() => { for (const b of document.querySelectorAll('button')) if (b.textContent.toLowerCase().match(/lanjutkan|continue|allow/)) { b.click(); return; } });
+        await sleep(3000); continue;
+      }
     }
 
-    // Get API key
-    info('Getting API key...');
-    await page.goto('https://ollama.com/settings/keys', { waitUntil: 'networkidle2', timeout: 15000 });
+    // Navigate to API keys
+    await page.goto('https://ollama.com/settings/keys', { waitUntil: 'domcontentloaded', timeout: 15000 });
     await sleep(3000);
 
-    // Click Add API Key
+    // Click Create/Add API Key
     await page.evaluate(() => {
-      const btns = document.querySelectorAll('button');
-      for (const b of btns) { if (b.textContent.includes('Add API Key')) { b.click(); return; } }
+      for (const b of document.querySelectorAll('button, a')) {
+        const t = (b.textContent || '').toLowerCase();
+        if (t.includes('create') || t.includes('add') || t.includes('generate')) { b.click(); return; }
+      }
     });
-    await sleep(2000);
+    await sleep(3000);
 
     // Click Generate
     await page.evaluate(() => {
-      const btns = document.querySelectorAll('button');
-      for (const b of btns) { if (b.textContent.includes('Generate')) { b.click(); return; } }
+      for (const b of document.querySelectorAll('button')) {
+        const t = (b.textContent || '').toLowerCase();
+        if (t.includes('generate') || t.includes('create') || t.includes('submit')) { b.click(); return; }
+      }
     });
     await sleep(5000);
 
-    // Extract key from hidden input
-    apiKey = await page.evaluate(() => {
+    // Extract key
+    const apiKey = await page.evaluate(() => {
       const inp = document.querySelector('input[name="api-key-string"]');
-      return inp ? inp.value : null;
+      if (inp && inp.value) return inp.value;
+      for (const el of document.querySelectorAll('code, pre')) {
+        const t = el.textContent.trim();
+        if (t.length > 20 && !t.includes(' ')) return t;
+      }
+      return null;
     });
 
     if (apiKey) {
-      ok(`API Key: ${apiKey.substring(0, 20)}...`);
-      fs.writeFileSync('ollama-key.txt', `Ollama API Key\nAccount: respati1@bozztirex.us\nKey: ${apiKey}\n\nUsage:\ncurl -X POST "https://ollama.com/api/chat" \\\n  -H "Authorization: Bearer ${apiKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"model": "gpt-oss:20b", "messages": [{"role": "user", "content": "Hello"}], "stream": false}'\n`);
-      ok('Saved to ollama-key.txt');
+      fs.writeFileSync(keyFile, `Ollama API Key\nAccount: respati1@bozztirex.us\nKey: ${apiKey}\n\nUsage:\ncurl -X POST "https://ollama.com/api/chat" \\\n  -H "Authorization: Bearer ${apiKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"model": "gpt-oss:20b", "messages": [{"role": "user", "content": "Hello"}], "stream": false}'\n`);
+      ok(`API key created: ${apiKey.substring(0, 15)}...`);
 
-      // Test API
-      info('Testing API...');
-      const testResult = run(`curl -sL -X POST "https://ollama.com/api/chat" -H "Authorization: Bearer ${apiKey}" -H "Content-Type: application/json" -d '{"model": "gpt-oss:20b", "messages": [{"role": "user", "content": "Hello! Reply briefly."}], "stream": false}'`, 30000);
-      if (testResult) {
-        try {
-          const parsed = JSON.parse(testResult);
-          if (parsed.message?.content) {
-            ok(`API Test: "${parsed.message.content.substring(0, 80)}..."`);
-          } else if (parsed.error) {
-            warn(`API Error: ${parsed.error}`);
-          }
-        } catch {}
-      }
+      // Test
+      const test = run(`curl -sL -X POST "https://ollama.com/api/chat" -H "Authorization: Bearer ${apiKey}" -H "Content-Type: application/json" -d '{"model":"gpt-oss:20b","messages":[{"role":"user","content":"Say OK"}],"stream":false}'`, 30000);
+      if (test && test.includes('message')) ok('API test passed');
+      else warn('API test inconclusive');
     } else {
-      warn('Could not extract API key');
+      err('Could not extract API key');
     }
 
+    await browser.close();
+    return !!apiKey;
   } catch (e) {
-    err(`Ollama error: ${e.message}`);
+    err(`Ollama setup error: ${e.message}`);
+    return false;
+  }
+}
+
+// ============================================================
+//  3. CLINE CLI
+// ============================================================
+async function setupCline() {
+  banner('3. CLINE CLI', c.blu);
+
+  // Check if installed
+  const binPath = path.join(WORKDIR, 'node_modules', '.bin', 'cline');
+  const clineBin = path.join(WORKDIR, 'node_modules', 'cline', 'bin', 'cline');
+
+  if (fs.existsSync(clineBin)) {
+    const ver = run(`node "${clineBin}" --version`, 10000);
+    if (ver) { ok(`Cline CLI ${ver}`); return true; }
   }
 
-  await browser.close();
-  return { apiKey, status: apiKey ? 'success' : 'failed' };
+  // Install
+  info('Installing Cline CLI...');
+  try {
+    // Install npm package
+    run('npm install --ignore-scripts --no-optional cline', 60000);
+
+    // Install platform binary
+    const platform = run('uname -m') === 'x86_64' ? 'x64' : 'arm64';
+    const cliPkg = `@cline/cli-linux-${platform}`;
+
+    // Download and extract manually
+    run(`npm pack ${cliPkg}`, 30000);
+    const tgz = run(`ls cline-cli-linux-${platform}-*.tgz 2>/dev/null | head -1`);
+    if (tgz) {
+      run(`mkdir -p /tmp/cline-bin && tar xzf ${tgz} -C /tmp/cline-bin`);
+      run(`mkdir -p node_modules/@cline/cli-linux-${platform}`);
+      run(`cp -r /tmp/cline-bin/package/* node_modules/@cline/cli-linux-${platform}/`);
+      run(`rm -f ${tgz}`);
+    }
+
+    const ver = run(`node "${clineBin}" --version`, 10000);
+    if (ver) { ok(`Cline CLI ${ver}`); return true; }
+    err('Cline install failed');
+    return false;
+  } catch (e) {
+    err(`Cline install error: ${e.message}`);
+    return false;
+  }
+}
+
+// ============================================================
+//  4. QODER DESKTOP
+// ============================================================
+async function setupDesktop() {
+  banner('4. QODER DESKTOP (Xvfb)', c.yel);
+
+  const desktopDir = '/tmp/qoder-desktop';
+  const debPath = path.join(WORKDIR, 'qoder_amd64.deb');
+  const qoderBin = path.join(desktopDir, 'usr', 'share', 'qoder', 'qoder');
+
+  // Check if already extracted
+  if (!fs.existsSync(qoderBin)) {
+    if (!fs.existsSync(debPath)) {
+      info('Downloading Qoder Desktop...');
+      run(`curl -L -o "${debPath}" "https://download.qoder.com/release/latest/qoder_amd64.deb"`, 120000);
+    }
+
+    if (fs.existsSync(debPath)) {
+      info('Extracting...');
+      run(`dpkg -x "${debPath}" "${desktopDir}/"`);
+    }
+  }
+
+  if (!fs.existsSync(qoderBin)) {
+    err('Qoder Desktop not found');
+    return false;
+  }
+  ok('Qoder Desktop extracted');
+
+  // Check dependencies
+  const gtkLib = '/tmp/gtk3/usr/lib/x86_64-linux-gnu/libgtk-3.so.0';
+  if (!fs.existsSync(gtkLib)) {
+    info('Downloading GTK3...');
+    run('curl -L -o /tmp/libgtk-3-0.deb "http://archive.ubuntu.com/ubuntu/pool/main/g/gtk+3.0/libgtk-3-0_3.24.33-1ubuntu2.2_amd64.deb"', 30000);
+    run('dpkg -x /tmp/libgtk-3-0.deb /tmp/gtk3/');
+  }
+
+  const epoxyLib = '/tmp/deps/usr/lib/x86_64-linux-gnu/libepoxy.so.0';
+  if (!fs.existsSync(epoxyLib)) {
+    info('Downloading libepoxy...');
+    run('curl -L -o /tmp/libepoxy0.deb "http://archive.ubuntu.com/ubuntu/pool/main/libe/libepoxy/libepoxy0_1.5.10-2build1_amd64.deb"', 15000);
+    run('dpkg -x /tmp/libepoxy0.deb /tmp/deps/');
+  }
+
+  const xineramaLib = '/tmp/deps/usr/lib/x86_64-linux-gnu/libXinerama.so.1';
+  if (!fs.existsSync(xineramaLib)) {
+    info('Downloading libXinerama...');
+    run('curl -L -o /tmp/libxinerama1.deb "http://archive.ubuntu.com/ubuntu/pool/main/libx/libxinerama/libxinerama1_1.1.4-3build1_amd64.deb"', 15000);
+    run('dpkg -x /tmp/libxinerama1.deb /tmp/deps/');
+  }
+
+  // Check Xvfb
+  if (!run('pgrep Xvfb')) {
+    info('Starting Xvfb...');
+    spawn('Xvfb', [':99', '-screen', '0', '1920x1080x24'], { detached: true, stdio: 'ignore' }).unref();
+    await sleep(2000);
+  }
+  ok('Xvfb running on :99');
+
+  // Verify LD_LIBRARY_PATH works
+  const ldPath = '/tmp/gtk3/usr/lib/x86_64-linux-gnu:/tmp/deps/usr/lib/x86_64-linux-gnu:/tmp/qoder-desktop/usr/share/qoder';
+  const missing = run(`LD_LIBRARY_PATH=${ldPath} ldd ${qoderBin} 2>&1 | grep "not found"`);
+  if (missing) {
+    warn(`Missing libs: ${missing.split('\n').join(', ')}`);
+  } else {
+    ok('All dependencies satisfied');
+  }
+
+  info(`Launch: DISPLAY=:99 LD_LIBRARY_PATH=${ldPath} ${qoderBin} --no-sandbox --disable-gpu`);
+  info('Then open browser → Usage panel → Claim 800 Free Calls');
+
+  return true;
+}
+
+// ============================================================
+//  5. CLAIM GUIDE
+// ============================================================
+function showClaimGuide() {
+  banner('5. CLAIM 800 FREE CALLS', c.grn);
+
+  console.log(`  ${c.b}Option A: Desktop App (recommended)${c.r}`);
+  console.log(`    1. Run: DISPLAY=:99 ${'/tmp/qoder-desktop/usr/share/qoder/qoder'} --no-sandbox`);
+  console.log(`    2. Click "Sign in" → Google OAuth`);
+  console.log(`    3. Open Usage panel → Click "Claim Now"`);
+  console.log('');
+  console.log(`  ${c.b}Option B: Local Machine${c.r}`);
+  console.log(`    1. Download: https://qoder.com/download`);
+  console.log(`    2. Install & login with respati1@bozztirex.us`);
+  console.log(`    3. Usage panel → Claim 800 Free Calls`);
+  console.log('');
+  console.log(`  ${c.b}Promo Info:${c.r}`);
+  const now = Date.now();
+  const promoEnd = new Date('2026-09-03T23:59:59+08:00').getTime();
+  const daysLeft = Math.ceil((promoEnd - now) / 86400000);
+  console.log(`    ⏰ ${daysLeft} days left (until Sep 3, 2026)`);
+  console.log(`    🎁 800 calls ≈ 80 tasks on Qwen3.8-Max`);
+  console.log(`    📱 Claim on one platform, use everywhere`);
 }
 
 // ============================================================
 //  RESULTS
 // ============================================================
-function showResults(qoderResult, ollamaResult) {
+function showResults(results) {
   banner('RESULTS', c.grn);
 
+  const items = [
+    ['Qoder CLI', results.cli],
+    ['Ollama API', results.ollama],
+    ['Cline CLI', results.cline],
+    ['Desktop', results.desktop],
+  ];
+
   console.log(`  ${c.b}┌────────────────────────────────────────────┐${c.r}`);
-  console.log(`  ${c.b}│           SETUP RESULTS                    │${c.r}`);
+  for (const [name, status] of items) {
+    const icon = status ? `${c.grn}✅${c.r}` : `${c.red}❌${c.r}`;
+    console.log(`  ${c.b}│${c.r}  ${icon} ${name.padEnd(20)} ${status ? 'Ready' : 'Needs attention'}`);
+  }
   console.log(`  ${c.b}├────────────────────────────────────────────┤${c.r}`);
-
-  // Qoder
-  const qStatus = qoderResult?.status === 'success' ? `${c.grn}✅ SUCCESS${c.r}` :
-                  qoderResult?.status === 'already_logged_in' ? `${c.grn}✅ ALREADY LOGGED IN${c.r}` :
-                  `${c.red}❌ FAILED${c.r}`;
-  const qEmail = qoderResult?.email || 'N/A';
-  console.log(`  ${c.b}│${c.r}  QODER   ${qStatus}`);
-  console.log(`  ${c.b}│${c.r}  Account: ${qEmail}`);
-
-  // Ollama
-  const oStatus = ollamaResult?.status === 'success' ? `${c.grn}✅ SUCCESS${c.r}` :
-                  `${c.red}❌ FAILED${c.r}`;
-  const oKey = ollamaResult?.apiKey ? `${ollamaResult.apiKey.substring(0, 20)}...` : 'N/A';
-  console.log(`  ${c.b}│${c.r}`);
-  console.log(`  ${c.b}│${c.r}  OLLAMA  ${oStatus}`);
-  console.log(`  ${c.b}│${c.r}  API Key: ${oKey}`);
-
-  console.log(`  ${c.b}├────────────────────────────────────────────┤${c.r}`);
-  console.log(`  ${c.b}│${c.r}  Files:`);
-  console.log(`  ${c.b}│${c.r}    accounts.txt   — Qoder accounts`);
-  console.log(`  ${c.b}│${c.r}    ollama-key.txt — Ollama API key`);
+  console.log(`  ${c.b}│${c.r}  📁 Files:`);
+  console.log(`  ${c.b}│${c.r}    accounts.txt      — Login credentials`);
+  console.log(`  ${c.b}│${c.r}    ollama-key.txt    — Ollama API key`);
+  console.log(`  ${c.b}│${c.r}    setup-all.js      — This script`);
+  console.log(`  ${c.b}│${c.r}    claim-guide.md    — Claim instructions`);
   console.log(`  ${c.b}└────────────────────────────────────────────┘${c.r}`);
-
-  // Promo info
-  const now = Date.now();
-  const promoEnd = new Date('2026-09-03T23:59:59+08:00').getTime();
-  const daysLeft = Math.ceil((promoEnd - now) / 86400000);
-
-  console.log(`
-${c.cyn}┌──────────────────────────────────────────────┐
-│${c.r}  ${c.grn}${c.b}✅ SETUP COMPLETE!${c.r}                          ${c.cyn}│
-├──────────────────────────────────────────────┤${c.r}
-│                                              │
-│  QODER:                                      │
-│  🎁 Claim 800 Free Calls:                    │
-│     ${c.blu}https://qoder.com/account/usage${c.r}          │
-│  ⏰ Promo: ${c.b}${daysLeft} hari lagi${c.r} (s/d 3 Sep 2026)   │
-│  🧪 Test: qodercli -p "Hello"               │
-│                                              │
-│  OLLAMA:                                     │
-│  📋 Models: 18 available                     │
-│  🆓 Free: gpt-oss:20b, gpt-oss:120b,        │
-│           gemma4:31b, nemotron-3-super, dll  │
-│  💡 Off-peak Qoder: 10pm-8am 50% OFF!       │
-│                                              │
-${c.cyn}└──────────────────────────────────────────────┘${c.r}`);
 }
 
 // ============================================================
 //  MAIN
 // ============================================================
 (async () => {
-  console.clear();
-  console.log(`
-${c.cyn}${c.b}┌──────────────────────────────────────────────┐
-│     ⚡ ALL-IN-ONE SETUP ⚡                   │
-│     Qoder + Ollama — 1 proses, 2 output      │
-└──────────────────────────────────────────────┘${c.r}`);
+  console.log(`\n${c.cyn}${c.b}╔══════════════════════════════════════════════════════╗`);
+  console.log(`║  ⚡ ALL-IN-ONE SETUP — Qoder Ecosystem              ║`);
+  console.log(`║  CLI + Ollama + Cline + Desktop + Claim Guide       ║`);
+  console.log(`╚══════════════════════════════════════════════════════╝${c.r}`);
 
-  const { action } = await inquirer.prompt([{
-    type: 'list',
-    name: 'action',
-    message: 'Pilih:',
-    choices: [
-      { name: '🚀 Setup All (Qoder + Ollama)', value: 'all' },
-      { name: '⚡ Qoder Only', value: 'qoder' },
-      { name: '🦙 Ollama Only', value: 'ollama' },
-      { name: '📊 Check Status', value: 'status' },
-      { name: '❌ Keluar', value: 'exit' }
-    ]
-  }]);
+  const results = {
+    cli: await setupQoderCli(),
+    ollama: await setupOllama(),
+    cline: await setupCline(),
+    desktop: await setupDesktop(),
+  };
 
-  if (action === 'exit') {
-    console.log(`\n${c.cyn}Bye! 👋${c.r}\n`);
-    return;
-  }
+  showClaimGuide();
+  showResults(results);
 
-  if (action === 'status') {
-    banner('STATUS', c.yel);
-    const qStatus = run('qodercli status');
-    console.log('QODER:', qStatus || 'Not installed/logged in');
-    console.log('');
-    const oKey = fs.existsSync('ollama-key.txt') ? fs.readFileSync('ollama-key.txt', 'utf-8').match(/Key: (.+)/)?.[1] : null;
-    console.log('OLLAMA:', oKey ? `API Key: ${oKey.substring(0, 20)}...` : 'No API key found');
-    return;
-  }
-
-  const accounts = loadAccounts();
-
-  let qoderResult = null;
-  let ollamaResult = null;
-
-  if (action === 'all' || action === 'qoder') {
-    qoderResult = await setupQoder(accounts);
-  }
-
-  if (action === 'all' || action === 'ollama') {
-    ollamaResult = await setupOllama(accounts);
-  }
-
-  showResults(qoderResult, ollamaResult);
+  console.log(`\n${c.grn}${c.b}✅ Setup complete!${c.r}\n`);
 })();
