@@ -23,7 +23,7 @@ accounts.txt
 *-cookies.json
 proxies.txt
 
-# Captcha solver (large, cloned separately)
+# Captcha solver (keep code, ignore runtime)
 captcha-solver/.venv/
 captcha-solver/__pycache__/
-captcha-solver/
+captcha-solver/*.pyc

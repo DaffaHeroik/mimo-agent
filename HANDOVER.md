@@ -68,6 +68,9 @@ node mimo-setup.js help
 - `ollama-keys.json` — Multi-account Ollama API keys
 - `.qoder-state.json` — Qoder login state per akun
 - `mimo-setup.js` — Main script
+- `captcha-solver/` — Captcha solver (11 types, port 8877)
+  - `captcha-solver/SKILL.md` — Skill documentation
+  - `captcha-solver/server.py` — FastAPI server
 
 ## Untuk sambung kerja:
 1. Baca MEMORY.md untuk faham konteks
