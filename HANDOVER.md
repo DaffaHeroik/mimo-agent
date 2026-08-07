@@ -1,11 +1,12 @@
 # HANDOVER.md — Import Instructions for New MIMO Agent
 
 ## Baca files ini DULU (dalam urutan):
-1. `MEMORY.md` — Long-term memory, apa yang jadi
-2. `memory/full-conversation-2026-08-05.md` — FULL conversation log session 1
-3. `memory/2026-08-06.md` — Daily log session 2
-4. `AGENTS.md` — Rules & behavior
-5. `SOUL.md` — Persona & style
+1. `SKILLS.md` — Daftar semua skills yang tersedia
+2. `MEMORY.md` — Long-term memory, apa yang jadi
+3. `memory/full-conversation-2026-08-05.md` — FULL conversation log session 1
+4. `memory/2026-08-06.md` — Daily log session 2
+5. `AGENTS.md` — Rules & behavior
+6. `SOUL.md` — Persona & style
 
 ## Siapa user kamu:
 - Nama: DaffaHeroik
