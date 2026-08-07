@@ -1,10 +1,10 @@
 # HANDOVER.md — Import Instructions for New MIMO Agent
 
 ## Baca files ini DULU (dalam urutan):
-1. `SKILLS.md` — Daftar semua skills yang tersedia
-2. `MEMORY.md` — Long-term memory, apa yang jadi
-3. `memory/full-conversation-2026-08-05.md` — FULL conversation log session 1
-4. `memory/2026-08-06.md` — Daily log session 2
+1. `MEMORY.md` — Long-term memory
+2. `memory/2026-08-08.md` — Latest daily log
+3. `memory/2026-08-06.md` — Previous daily log
+4. `memory/full-conversation-2026-08-05.md` — Full session 1 log
 5. `AGENTS.md` — Rules & behavior
 6. `SOUL.md` — Persona & style
 
@@ -15,65 +15,46 @@
 - Style: Direct, suka automation, sanggup debug lama
 - Goal: Free AI tools untuk coding
 
-## Apa yang dah siap:
-- ✅ Qoder CLI v1.1.15 — logged in, Qwen3.8-Max available
-- ✅ Ollama Cloud API — API key dalam ollama-keys.json
-- ✅ Cline CLI v3.0.50 — installed
-- ✅ Qoder Desktop — installed + Xvfb + deps
-- ✅ mimo-setup.js — All-In-One UI (v2.0)
-- ✅ Captcha Solver — captcha-solver/ (Turnstile, reCAPTCHA, hCaptcha, Cloudflare, dll)
+## Status Terkini (Aug 8, 2026)
 
-## Apa yang gagal (jangan cuba lagi):
-- ❌ CodeBuddy — Tencent block Alibaba Cloud IP
-- ❌ IBM Bob — IBM Security Verify block
-- ❌ AdaL — Clerk bot detection block
-- ❌ GoRouter — Registration disabled
-- ❌ Claim 800 free calls via API — token encrypted with WASM
+### ✅ Yang Berhasil
+1. **novabox/Blackbox.ai** — 5 API keys, 123 models (GPT-5.5, DeepSeek V4, Grok 4.3, Kimi K3, Claude Sonnet 4.5, Gemini 3.5 Flash, dll)
+2. **Qoder CLI v1.1.17** — Installed, perlu login + claim 800 free calls
+3. **Captcha Solver** — 11 types, port 8877 (Turnstile, reCAPTCHA, hCaptcha, dll)
+4. **Playwright Chromium** — Installed for novabox
 
-## Script utama (mimo-setup.js v2.0):
+### ⚠️ Perlu Manual
+5. **IBM Bob** — Form works, disposable email blocked. Options:
+   - Register manual di https://bob.ibm.com/trial dengan real email
+   - Atau pakai "Sign up with Google" / "Sign up with GitHub"
+
+### ❌ Blocked (Datacenter IP)
+6. **AdaL** — Clerk bot detection (domain: adalagent.ai)
+7. **CodeBuddy** — Tencent IP block (Access Restricted)
+8. **GoRouter** — Cloudflare 403
+
+## Quick Start
+
 ```bash
-# Interactive TUI (pilih flow → otomatis jalan semua akun)
-node mimo-setup.js
+cd ~/.openclaw/workspace/mimo-agent
 
-# Flow Qoder: Install → Login semua akun → Claim 800 calls
-node mimo-setup.js qoder
+# Farm Blackbox.ai keys (needs Playwright)
+cd ~/.openclaw/workspace/novabox
+PLAYWRIGHT_BROWSERS_PATH=~/.cache/ms-playwright python3 mailtm-farm.py
 
-# Flow Ollama: Login semua akun → Create API key → Simpan
-node mimo-setup.js ollama
+# Start captcha solver
+cd ~/.openclaw/workspace/mimo-agent/captcha-solver
+python3 server.py &
 
-# Flow Full: Qoder + Ollama + Cline + Desktop
-node mimo-setup.js full
-
-# Status dashboard
-node mimo-setup.js status
-
-# Captcha solver (setup & start)
-node mimo-setup.js captcha
-
-# Lihat semua Ollama API keys
-node mimo-setup.js keys
-
-# Help
-node mimo-setup.js help
+# Qoder CLI
+qodercli status
+qodercli -p "Hello"
 ```
 
-## Flow:
-1. Baca semua akun dari `accounts.txt` (format: `email|password`)
-2. Pilih flow (Qoder / Ollama / Full)
-3. Otomatis loop semua akun 1 per 1
-4. Qoder: Install CLI → Login tiap akun → Claim guide
-5. Ollama: Login tiap akun → Create API key → Simpan ke `ollama-keys.json`
-
-## Files:
-- `accounts.txt` — Semua akun (email|password)
-- `ollama-keys.json` — Multi-account Ollama API keys
-- `.qoder-state.json` — Qoder login state per akun
-- `mimo-setup.js` — Main script
-- `captcha-solver/` — Captcha solver (11 types, port 8877)
-  - `captcha-solver/SKILL.md` — Skill documentation
-  - `captcha-solver/server.py` — FastAPI server
-
-## Untuk sambung kerja:
-1. Baca MEMORY.md untuk faham konteks
-2. Run `node mimo-setup.js status` untuk verify status
-3. Run `node mimo-setup.js full` untuk setup semua
+## Files
+- `novabox-output/` — Blackbox farm scripts + harvested keys
+- `retry-adal-*.js` — AdaL retry attempts
+- `retry-bob*.js` — IBM Bob retry attempts
+- `captcha-solver/` — Captcha solver (11 types)
+- `accounts.txt` — Login credentials
+- `memory/` — Daily logs

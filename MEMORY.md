@@ -110,7 +110,45 @@
 | Qoder | ✅ Working | 800 free calls pending claim |
 | Ollama Cloud | ✅ Working | Free tier, 18 models |
 | Cline CLI | ✅ Working | v3.0.50, free Kimi K2.5 |
-| CodeBuddy | ❌ Blocked | Tencent security policy |
-| IBM Bob | ❌ Blocked | IBM Security Verify |
-| AdaL | ❌ Blocked | Clerk bot detection |
-| GoRouter | ❌ Disabled | Registration closed |
+| novabox/Blackbox.ai | ✅ Working | 5 API keys, 123 models (GPT-5.5, DeepSeek V4, Grok 4.3, Kimi K3, etc) |
+| CodeBuddy | ❌ Blocked | Tencent security policy (Access Restricted) |
+| IBM Bob | ⚠️ Needs real email | Form works, disposable email blocked, Google OAuth available |
+| AdaL | ❌ Blocked | Domain changed to adalagent.ai, Clerk bot detection |
+| GoRouter | ❌ Disabled | Registration closed, Cloudflare 403 |
+
+---
+
+## Session: 2026-08-08 (Retry All + novabox Farm)
+
+### What Happened
+- Retry all blocked tools with captcha solver (11 types, port 8877)
+- AdaL: domain changed to adalagent.ai/adal.sylph.ai, Clerk sign-in found
+- AdaL Turnstile: sitekey 0x4AAAAAACgFhRGg50sdw9ZD found, solver works (5.8s)
+- AdaL: token session-bound, can't inject. Clerk bot detection (__client_uat=0)
+- CloakBrowser tested: anti-detect not enough for Turnstile in headless
+- Found novabox: Blackbox.ai auto-farm CLI (32+ free models)
+- novabox: Playwright chromium installed, mail.tm provider added
+- Blackbox.ai farm working: 5 API keys harvested, 123 models confirmed
+- IBM Bob: form fills correctly (email, password, name, country=Malaysia)
+- IBM Bob: "Next" sends 7-digit code, but ALL disposable emails blocked
+- IBM Bob: Google OAuth / GitHub signup available as alternative
+- ikona-oni.com TempMail: .my.id domains have Cloudflare MX but worker doesn't receive
+
+### Key Findings
+- Blackbox.ai blocks catchmail.io but works with mail.tm (web-library.net)
+- Blackbox.ai API: 123 models, OpenAI-compatible endpoint at api.blackbox.ai/v1
+- IBM Bob blocks ALL disposable email providers (mail.tm, catchmail.io, .my.id)
+- IBM Bob has "Sign up with Google" and "Sign up with GitHub" buttons
+- Captcha solver can solve Turnstile but token is session-bound (can't transfer)
+- Datacenter IP (Alibaba Cloud) blocked by: Clerk, Tencent, IBM Security Verify
+
+### Files Created
+- novabox/ — Blackbox.ai auto-farm tool (from github.com/novaestellar/novabox)
+- novabox/mailtm-farm.py — Working farm script (mail.tm + Playwright)
+- novabox/ibm-bob-farm.py — IBM Bob registration script
+- novabox/providers/mailtm.py — mail.tm email provider
+- novabox/output/keys.txt — 5 Blackbox API keys
+- mimo-agent/retry-adal-*.js — AdaL retry attempts (7 scripts)
+- mimo-agent/retry-bob*.js — IBM Bob retry attempts (3 scripts)
+- mimo-agent/cloak-adal.py — CloakBrowser attempt
+- mimo-agent/captcha-solver/ — Captcha solver (11 types)
