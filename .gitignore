@@ -22,3 +22,8 @@ ollama-key.txt
 accounts.txt
 *-cookies.json
 proxies.txt
+
+# Captcha solver (large, cloned separately)
+captcha-solver/.venv/
+captcha-solver/__pycache__/
+captcha-solver/

@@ -20,6 +20,7 @@
 - ✅ Cline CLI v3.0.50 — installed
 - ✅ Qoder Desktop — installed + Xvfb + deps
 - ✅ mimo-setup.js — All-In-One UI (v2.0)
+- ✅ Captcha Solver — captcha-solver/ (Turnstile, reCAPTCHA, hCaptcha, Cloudflare, dll)
 
 ## Apa yang gagal (jangan cuba lagi):
 - ❌ CodeBuddy — Tencent block Alibaba Cloud IP
@@ -44,6 +45,9 @@ node mimo-setup.js full
 
 # Status dashboard
 node mimo-setup.js status
+
+# Captcha solver (setup & start)
+node mimo-setup.js captcha
 
 # Lihat semua Ollama API keys
 node mimo-setup.js keys

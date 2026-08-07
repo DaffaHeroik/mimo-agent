@@ -1048,6 +1048,140 @@ async function flowFull(accounts) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+//  CAPTCHA SOLVER — Setup & Manage
+// ═══════════════════════════════════════════════════════════════
+
+const CAPTCHA_DIR = path.join(WORKDIR, 'captcha-solver');
+const CAPTCHA_PORT = 8877;
+
+function isCaptchaInstalled() {
+  return fs.existsSync(path.join(CAPTCHA_DIR, 'server.py'));
+}
+
+function isCaptchaRunning() {
+  const result = run(`curl -sL -m 3 http://127.0.0.1:${CAPTCHA_PORT}/health`, 5000);
+  return result && result.includes('turnstile');
+}
+
+async function setupCaptcha() {
+  banner('🛡️  CAPTCHA SOLVER', c.mag);
+
+  if (!isCaptchaInstalled()) {
+    err('captcha-solver tidak ditemukan!');
+    info('Pastikan folder captcha-solver ada di project root');
+    return false;
+  }
+  ok('captcha-solver ditemukan');
+
+  // Check Python deps
+  info('Checking Python dependencies...');
+  const deps = ['fastapi', 'uvicorn', 'pydantic', 'cloakbrowser', 'PIL'];
+  const missing = [];
+  for (const dep of deps) {
+    const check = run(`python3 -c "import ${dep === 'PIL' ? 'PIL' : dep}" 2>&1`, 5000);
+    if (check && check.includes('ModuleNotFoundError')) missing.push(dep);
+  }
+
+  if (missing.length > 0) {
+    warn(`Missing: ${missing.join(', ')}`);
+    info('Installing dependencies...');
+    run('pip3 install --user fastapi uvicorn pydantic cloakbrowser pillow onnxruntime opencv-python-headless numpy', 120000);
+  }
+  ok('Dependencies OK');
+
+  // Check if running
+  if (isCaptchaRunning()) {
+    ok(`Already running on port ${CAPTCHA_PORT}`);
+    return true;
+  }
+
+  // Start server
+  info(`Starting on port ${CAPTCHA_PORT}...`);
+  const proc = spawn('python3', ['server.py'], {
+    cwd: CAPTCHA_DIR,
+    env: { ...process.env, PORT: String(CAPTCHA_PORT), BROWSER_HEADLESS: '0' },
+    detached: true,
+    stdio: ['ignore', 'pipe', 'pipe']
+  });
+  proc.unref();
+
+  // Wait for startup
+  for (let i = 0; i < 15; i++) {
+    await sleep(1000);
+    if (isCaptchaRunning()) {
+      ok(`Running on http://127.0.0.1:${CAPTCHA_PORT}`);
+      return true;
+    }
+  }
+  warn('Server started but health check not confirmed');
+  return true;
+}
+
+async function testCaptcha() {
+  banner('🧪 TEST CAPTCHA SOLVER', c.mag);
+
+  if (!isCaptchaRunning()) {
+    err('Server not running! Jalankan setup dulu.');
+    return;
+  }
+
+  // Health check
+  info('Health check...');
+  const health = run(`curl -sL http://127.0.0.1:${CAPTCHA_PORT}/health`, 5000);
+  if (health) {
+    try {
+      const data = JSON.parse(health);
+      ok(`Status: ${data.status}`);
+      console.log(`  Types: ${data.types?.join(', ') || 'N/A'}`);
+    } catch { ok(health.substring(0, 100)); }
+  }
+
+  // Test solve (turnstile stub)
+  info('Test solve (turnstile)...');
+  const result = run(`curl -sL -m 65 -X POST http://127.0.0.1:${CAPTCHA_PORT}/solve -H "Content-Type: application/json" -d '{"type":"turnstile","sitekey":"0x4AAAAAAABnp1QeF6Mg","url":"https://example.com","timeout_s":30}'`, 70000);
+  if (result) {
+    try {
+      const data = JSON.parse(result);
+      if (data.token) {
+        ok(`Token: ${data.token.substring(0, 30)}...`);
+      } else if (data.error) {
+        warn(`Error: ${data.error}`);
+      } else {
+        console.log(JSON.stringify(data, null, 2).substring(0, 300));
+      }
+    } catch { console.log(result.substring(0, 300)); }
+  } else {
+    warn('No response (timeout or connection error)');
+  }
+}
+
+function showCaptchaStatus() {
+  banner('🛡️  CAPTCHA SOLVER STATUS', c.mag);
+
+  const installed = isCaptchaInstalled();
+  const running = isCaptchaRunning();
+
+  console.log(`  ${installed ? c.grn + '✅' : c.red + '❌'}${c.r} Installed: ${installed ? 'Yes' : 'No'}`);
+  console.log(`  ${running ? c.grn + '✅' : c.red + '❌'}${c.r} Running: ${running ? `http://127.0.0.1:${CAPTCHA_PORT}` : 'No'}`);
+
+  if (running) {
+    const health = run(`curl -sL http://127.0.0.1:${CAPTCHA_PORT}/health`, 5000);
+    if (health) {
+      try {
+        const data = JSON.parse(health);
+        console.log(`  ${c.blu}ℹ${c.r} Types: ${data.types?.join(', ') || 'N/A'}`);
+      } catch {}
+    }
+  }
+
+  console.log(`\n  ${c.b}Endpoints:${c.r}`);
+  console.log(`    GET  /health  — Liveness check`);
+  console.log(`    POST /solve   — Solve captcha`);
+  console.log(`    GET  /docs    — Swagger UI`);
+  console.log(`    GET  /status  — Service status`);
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  MAIN MENU
 // ═══════════════════════════════════════════════════════════════
 
@@ -1097,6 +1231,8 @@ async function mainMenu() {
       new inquirer.Separator(`── Per Layanan (loop semua akun) ──`),
       { name: '⚡  QODER — Install → Login semua → Claim 800 calls', value: 'qoder' },
       { name: '☁️   OLLAMA — Login semua → Create API key → Simpan', value: 'ollama' },
+      new inquirer.Separator(`── Tools ──`),
+      { name: '🛡️   CAPTCHA SOLVER — Setup & manage', value: 'captcha' },
       new inquirer.Separator(`── Info ──`),
       { name: '📊  Status Dashboard', value: 'status' },
       { name: '🔑  Lihat Semua Ollama Keys', value: 'keys' },
@@ -1108,6 +1244,22 @@ async function mainMenu() {
     case 'full':   await flowFull(accounts); break;
     case 'qoder':  await flowQoder(accounts); break;
     case 'ollama': await flowOllama(accounts); break;
+    case 'captcha': {
+      const inquirer2 = loadModule('inquirer');
+      const { cAction } = await inquirer2.prompt([{
+        type: 'select', name: 'cAction', message: 'Captcha Solver:',
+        choices: [
+          { name: '🚀  Setup & Start', value: 'setup' },
+          { name: '🧪  Test Solve', value: 'test' },
+          { name: '📊  Status', value: 'status' },
+          { name: '←  Back', value: 'back' },
+        ]
+      }]);
+      if (cAction === 'setup') await setupCaptcha();
+      else if (cAction === 'test') await testCaptcha();
+      else if (cAction === 'status') showCaptchaStatus();
+      break;
+    }
     case 'status': await showDashboard(); break;
     case 'keys': {
       banner('🔑 OLLAMA API KEYS', c.mag);
@@ -1162,6 +1314,10 @@ async function cliMode(args) {
       if (accounts.length === 0) { err('No accounts in accounts.txt'); return; }
       await flowFull(accounts);
       break;
+    case 'captcha':
+    case '--captcha':
+      await setupCaptcha();
+      break;
     case 'keys':
     case '--keys': {
       const keys = loadKeys();
@@ -1185,6 +1341,7 @@ ${c.cyn}${c.b}MIMO SETUP — All-In-One Manager${c.r}
       console.log(`  full         Qoder + Ollama + Cline + Desktop`);
       console.log(`  qoder        Install -> Login semua -> Claim 800 calls`);
       console.log(`  ollama       Login semua -> Create API key -> Simpan`);
+      console.log(`  captcha      Setup & start captcha solver`);
       console.log();
       console.log(`Tools:`);
       console.log(`  status       Status dashboard`);
