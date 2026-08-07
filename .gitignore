@@ -14,3 +14,11 @@ node_modules/
 ollama-*.png
 qoder-*.png
 qoder-desktop-*.png
+
+# Sensitive files (DO NOT PUSH)
+ollama-keys.json
+ollama-key.txt
+.qoder-state.json
+accounts.txt
+*-cookies.json
+proxies.txt

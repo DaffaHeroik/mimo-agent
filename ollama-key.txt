@@ -1,9 +1,0 @@
-Ollama API Key
-Account: respati1@bozztirex.us
-Key: 05225fc660ab4c208db24d9a9670b1b7.GHj_yPq8SbXJajYnSggueQO9
-
-Usage:
-curl -X POST "https://ollama.com/api/chat" \
-  -H "Authorization: Bearer 05225fc660ab4c208db24d9a9670b1b7.GHj_yPq8SbXJajYnSggueQO9" \
-  -H "Content-Type: application/json" \
-  -d '{"model": "gpt-oss:20b", "messages": [{"role": "user", "content": "Hello"}], "stream": false}'

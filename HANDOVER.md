@@ -16,9 +16,10 @@
 
 ## Apa yang dah siap:
 - ✅ Qoder CLI v1.1.15 — logged in, Qwen3.8-Max available
-- ✅ Ollama Cloud API — API key dalam ollama-key.txt
+- ✅ Ollama Cloud API — API key dalam ollama-keys.json
 - ✅ Cline CLI v3.0.50 — installed
 - ✅ Qoder Desktop — installed + Xvfb + deps
+- ✅ mimo-setup.js — All-In-One UI (v2.0)
 
 ## Apa yang gagal (jangan cuba lagi):
 - ❌ CodeBuddy — Tencent block Alibaba Cloud IP
@@ -27,19 +28,44 @@
 - ❌ GoRouter — Registration disabled
 - ❌ Claim 800 free calls via API — token encrypted with WASM
 
-## Script utama:
+## Script utama (mimo-setup.js v2.0):
 ```bash
-node setup-all.js    # All-in-one: CLI + Ollama + Cline + Desktop
+# Interactive TUI (pilih flow → otomatis jalan semua akun)
+node mimo-setup.js
+
+# Flow Qoder: Install → Login semua akun → Claim 800 calls
+node mimo-setup.js qoder
+
+# Flow Ollama: Login semua akun → Create API key → Simpan
+node mimo-setup.js ollama
+
+# Flow Full: Qoder + Ollama + Cline + Desktop
+node mimo-setup.js full
+
+# Status dashboard
+node mimo-setup.js status
+
+# Lihat semua Ollama API keys
+node mimo-setup.js keys
+
+# Help
+node mimo-setup.js help
 ```
 
-## Claim 800 free calls:
-Baca `claim-guide.md` — perlu Desktop app di komputer lokal
+## Flow:
+1. Baca semua akun dari `accounts.txt` (format: `email|password`)
+2. Pilih flow (Qoder / Ollama / Full)
+3. Otomatis loop semua akun 1 per 1
+4. Qoder: Install CLI → Login tiap akun → Claim guide
+5. Ollama: Login tiap akun → Create API key → Simpan ke `ollama-keys.json`
+
+## Files:
+- `accounts.txt` — Semua akun (email|password)
+- `ollama-keys.json` — Multi-account Ollama API keys
+- `.qoder-state.json` — Qoder login state per akun
+- `mimo-setup.js` — Main script
 
 ## Untuk sambung kerja:
 1. Baca MEMORY.md untuk faham konteks
-2. Run `node setup-all.js` untuk verify status
-3. Claim 800 free calls dari Desktop app lokal
-4. Explore lebih banyak free models
-
-## Prompt untuk start:
-"Baca MEMORY.md dan memory/2026-08-06.md. Aku nak sambung kerja dari session semalam. Check status semua tools, pastu kita proceed."
+2. Run `node mimo-setup.js status` untuk verify status
+3. Run `node mimo-setup.js full` untuk setup semua

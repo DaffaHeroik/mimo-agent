@@ -82,6 +82,28 @@
 
 ---
 
+---
+
+## Session: 2026-08-07 (All-In-One UI v2.0)
+
+### What Happened
+- Rewrote all-in-one setup script as `mimo-setup.js` v2.0
+- Unified TUI with inquirer: all components in one interactive menu
+- Added CLI mode (non-interactive): `node mimo-setup.js [command]`
+- Fixed inquirer v14 ESM compatibility (default export, `select` vs `list`)
+- Auto-detect Chrome path (puppeteer cache, ms-playwright, system)
+- Retry logic on all browser-based operations (3 attempts)
+- Google OAuth helper with full consent/speedbump/2FA handling
+- Status dashboard with live health checks
+- Test functions for both Qoder and Ollama API
+
+### Files Created/Updated
+- mimo-setup.js — All-In-One UI v2.0 (main script)
+- setup-all.js — Now a wrapper that delegates to mimo-setup.js
+- HANDOVER.md — Updated with new script usage
+
+---
+
 ## Free AI Tools Status (Aug 2026)
 | Tool | Status | Notes |
 |------|--------|-------|
