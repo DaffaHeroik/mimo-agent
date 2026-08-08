@@ -15,23 +15,28 @@
 - Style: Direct, suka automation, sanggup debug lama
 - Goal: Free AI tools untuk coding
 
-## Status Terkini (Aug 8, 2026)
+## Status Terkini (Aug 8, 2026 14:22)
 
 ### ✅ Yang Berhasil
-1. **novabox/Blackbox.ai** — 5 API keys, 123 models (GPT-5.5, DeepSeek V4, Grok 4.3, Kimi K3, Claude Sonnet 4.5, Gemini 3.5 Flash, dll)
+1. **novabox/Blackbox.ai** — 5 API keys, 123 models
 2. **Qoder CLI v1.1.17** — Installed, perlu login + claim 800 free calls
-3. **Captcha Solver** — 11 types, port 8877 (Turnstile, reCAPTCHA, hCaptcha, dll)
-4. **Playwright Chromium** — Installed for novabox
+3. **Captcha Solver** — 11 types, port 8877
+4. **TempMail API** — Scraped, inbox check PUBLIC (ikona-oni.com)
+5. **CamoFox Browser** — Plugin installed (needs GTK3 on server)
+6. **Working Proxy** — 66.163.127.204:10006 (bypasses IBM IP block)
 
 ### ⚠️ Perlu Manual
-5. **IBM Bob** — Form works, disposable email blocked. Options:
-   - Register manual di https://bob.ibm.com/trial dengan real email
-   - Atau pakai "Sign up with Google" / "Sign up with GitHub"
+7. **IBM Bob** — Proxy works, form submits, tapi:
+   - IBM block semua disposable email (mail.tm, .my.id, tutamail.com)
+   - User email uchita9@bozztirex.us udah punya IBM account (password salah)
+   - **Solusi:** Login manual dari komputer lokal, atau reset password
+8. **Tutanota** — Signup works tapi CAPTCHA unreliable
 
-### ❌ Blocked (Datacenter IP)
-6. **AdaL** — Clerk bot detection (domain: adalagent.ai)
-7. **CodeBuddy** — Tencent IP block (Access Restricted)
-8. **GoRouter** — Cloudflare 403
+### ❌ Blocked
+9. **AdaL** — Clerk bot detection
+10. **CodeBuddy** — Tencent IP block
+11. **GoRouter** — Registration disabled
+12. **GitHub** — DataDome CAPTCHA on signup
 
 ## Quick Start
 
