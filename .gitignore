@@ -27,3 +27,14 @@ proxies.txt
 captcha-solver/.venv/
 captcha-solver/__pycache__/
 captcha-solver/*.pyc
+
+# Temp/screenshots
+*.png
+output/
+node_modules/
+tuta-clock*.png
+tuta-captcha*.png
+gh-*.png
+github-*.png
+ibm-*.png
+bob-*.png

@@ -37,6 +37,15 @@ Skills yang sudah include di repo ini. Setiap import mimo-agent otomatis dapat s
 - **Apa:** AI coding CLI
 - **Via mimo:** `node mimo-setup.js full` (step 4)
 
+### 6. 📧 TempMail API
+- **Lokasi:** `tempmail/`
+- **SKILL:** `tempmail/SKILL.md`
+- **Apa:** Disposable email API dari ikona-oni.com
+- **API Base:** `https://tempmail-worker.hasildia1.workers.dev`
+- **Key:** Inbox check PUBLIC (no auth), generate butuh auth
+- **Domain:** `merapi92338.my.id` + dynamic dari Supabase
+- **Use case:** Auto-registration, email verification, testing
+
 ---
 
 ## 🔧 Cara Pakai

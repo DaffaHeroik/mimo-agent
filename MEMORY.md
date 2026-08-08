@@ -104,6 +104,49 @@
 
 ---
 
+## Core Principles (2026-08-08)
+
+### 1. Jangan Pernah Menyerah
+Kalau project stuck, terus cari cara sampai dapat. Jangan bilang "gak bisa" atau "skip".
+
+### 2. Jangan Muter-Muter (TAMBAHAN BARU)
+User marah karena gue kebanyakan putar-putar, ulang cara sama, pilih opsi susah, buang waktu.
+**Rules:**
+- Kalau 3x coba gagal → ganti approach total, jangan ulang
+- Ambil jalan paling simple, bukan paling canggih
+- Stop & pikir sebelum coding — kadang solusi bukan di code
+- Jangan bikin script 100+ baris kalau bisa 20 baris
+
+---
+
+## TempMail API (ikona-oni.com) — Scraped 2026-08-08
+
+### API Base
+`https://tempmail-worker.hasildia1.workers.dev` (Cloudflare Worker)
+
+### Key Endpoints
+- `GET /health` — Health check
+- `GET /inbox/{email}` — Check inbox (PUBLIC, no auth)
+- `GET /view/{email_id}` — View email content (PUBLIC)
+- `POST /auth/login` — Login (username/password → JWT)
+- `POST /api/generate` — Generate temp email (auth required)
+- `GET /admin/stats` — Admin stats
+- `GET /admin/accounts` — List accounts
+- `GET /admin/domains` — List domains
+
+### Supabase (Dynamic Domains)
+- URL: `https://spdjcdudscoqcxlytcbx.supabase.co`
+- Table: `domains`
+- Known domain: `merapi92338.my.id`
+
+### Notes
+- Inbox check is PUBLIC — bisa cek email tanpa auth
+- Generate email butuh auth token
+- Emails auto-delete after 6 hours
+- Detail lengkap: `memory/tempmail-api.md`
+
+---
+
 ## Free AI Tools Status (Aug 2026)
 | Tool | Status | Notes |
 |------|--------|-------|
