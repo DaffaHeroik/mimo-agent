@@ -21,7 +21,14 @@ export async function googleLogin(page, email, password, opts = {}) {
     }
 
     // Enter email
-    await emailInput.click({ clickCount: 3 });
+    try {
+      await emailInput.click({ clickCount: 3 });
+    } catch {
+      await page.evaluate(() => {
+        const input = document.querySelector('input[type="email"], #identifierId');
+        if (input) { input.focus(); input.value = ''; }
+      });
+    }
     await emailInput.type(email, { delay: 50 });
     await randomSleep(500, 1000);
     
@@ -48,7 +55,15 @@ export async function googleLogin(page, email, password, opts = {}) {
     }
 
     // Enter password
-    await passwordInput.click({ clickCount: 3 });
+    try {
+      await passwordInput.click({ clickCount: 3 });
+    } catch {
+      // Fallback: use evaluate to focus and clear
+      await page.evaluate(() => {
+        const input = document.querySelector('input[type="password"]');
+        if (input) { input.focus(); input.value = ''; }
+      });
+    }
     await passwordInput.type(password, { delay: 50 });
     await randomSleep(500, 1000);
     

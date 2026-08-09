@@ -1,252 +1,157 @@
 import BaseWorker from '../base/BaseWorker.js';
 import { sleep, randomSleep } from '../../utils/index.js';
-import { getEmailProvider } from '../../providers/email/index.js';
-import config from '../../config/index.js';
+import { googleLogin } from '../../providers/google/login.js';
 
-const BLACKBOX_BASE = 'https://www.blackbox.ai';
-const NOVABOX_API = 'https://api.novabox.io';
+const BLACKBOX_APP = 'https://app.blackbox.ai';
 
 export default class NovaboxWorker extends BaseWorker {
-  get platformName() {
-    return 'novabox';
-  }
+  get platformName() { return 'novabox'; }
 
   async executeForAccount(account, page, log) {
-    // Novabox uses temp email for registration, not Google OAuth
-    // The account email/password are used as fallback if temp email fails
+    const { email, password } = account;
 
-    // Step 1: Create temp email
-    log(`  Creating temp email...`);
-    const emailProvider = getEmailProvider(config.TEMP_EMAIL_PROVIDER);
-    const emailAccount = await emailProvider.createAccount();
-    const tempEmail = emailAccount.address;
-    log(`  Temp email: ${tempEmail}`);
-
-    // Step 2: Navigate to Blackbox.ai / Novabox registration
-    log(`  Navigating to Blackbox.ai...`);
-    await page.goto(`${BLACKBOX_BASE}`, { waitUntil: 'networkidle', timeout: 60000 });
+    // Step 1: Navigate to Blackbox.ai login page
+    log(`  Navigating to Blackbox.ai login...`);
+    await page.goto(`${BLACKBOX_APP}/login`, { waitUntil: 'networkidle2', timeout: 60000 });
     await sleep(2000);
 
-    // Look for sign up / register
-    const signupBtn = await page.$(
-      'a:has-text("Sign Up"), a:has-text("Register"), button:has-text("Sign Up"), a[href*="signup"], a[href*="register"]'
-    );
-
-    if (signupBtn) {
-      await signupBtn.click();
-      await sleep(3000);
-    } else {
-      await page.goto(`${BLACKBOX_BASE}/signup`, { waitUntil: 'networkidle', timeout: 30000 }).catch(() => {});
-      await sleep(2000);
-    }
-
-    // Step 3: Fill registration form
-    log(`  Filling registration form...`);
-    const randomPass = `BlkBx!${Math.random().toString(36).slice(2)}${Date.now()}`;
-
-    // Email
-    const emailInput = await page.$(
-      'input[name="email"], input[type="email"], input[placeholder*="email"], input[placeholder*="Email"]'
-    );
-    if (emailInput) {
-      await emailInput.fill(tempEmail);
-      await randomSleep(300, 800);
-    }
-
-    // Password
-    const passInputs = await page.$$('input[type="password"]');
-    if (passInputs.length >= 1) {
-      await passInputs[0].fill(randomPass);
-      await randomSleep(300, 800);
-    }
-    if (passInputs.length >= 2) {
-      await passInputs[1].fill(randomPass); // confirm password
-      await randomSleep(300, 800);
-    }
-
-    // Name (if present)
-    const nameInput = await page.$('input[name="name"], input[name="firstName"], input[placeholder*="name"]');
-    if (nameInput) {
-      await nameInput.fill(`MimoUser${Math.random().toString(36).slice(2, 8)}`);
-      await randomSleep(300, 800);
-    }
-
-    // Submit registration
-    const submitBtn = await page.$(
-      'button[type="submit"], button:has-text("Sign Up"), button:has-text("Register"), button:has-text("Create Account")'
-    );
-    if (submitBtn) {
-      await submitBtn.click();
-      await sleep(5000);
-    }
-
-    // Step 4: Check for verification email
-    log(`  Waiting for verification email...`);
-    let verificationLink = '';
-
-    try {
-      const email = await emailProvider.waitForEmail(
-        (msg) => {
-          const subject = (msg.subject || '').toLowerCase();
-          const from = (msg.from?.address || msg.from || '').toLowerCase();
-          return (
-            subject.includes('verif') ||
-            subject.includes('confirm') ||
-            subject.includes('activate') ||
-            from.includes('blackbox') ||
-            from.includes('novabox')
-          );
-        },
-        120000,
-        5000
-      );
-
-      // Extract verification link
-      const body = email.text || email.html || email.body || '';
-      const linkMatch = body.match(/(https?:\/\/[^\s"<>]+(?:verify|confirm|activate)[^\s"<>]*)/i);
-      if (linkMatch) {
-        verificationLink = linkMatch[1];
-      }
-
-      // Also check for verification code
-      const codeMatch = body.match(/(?:code|OTP|pin)[:\s]*(\d{4,8})/i);
-      if (codeMatch && !verificationLink) {
-        // Navigate to verification page and enter code
-        const codeInput = await page.$('input[name="code"], input[name="otp"], input[placeholder*="code"]');
-        if (codeInput) {
-          await codeInput.fill(codeMatch[1]);
-          const verifyBtn = await page.$('button:has-text("Verify"), button:has-text("Confirm"), button[type="submit"]');
-          if (verifyBtn) await verifyBtn.click();
-          await sleep(3000);
-        }
-      }
-    } catch (err) {
-      log(`  Warning: ${err.message}. Trying without verification...`);
-    }
-
-    // Step 5: Visit verification link if found
-    if (verificationLink) {
-      log(`  Verifying email...`);
-      await page.goto(verificationLink, { waitUntil: 'networkidle', timeout: 30000 });
-      await sleep(3000);
-    }
-
-    // Step 6: Navigate to API keys / settings
-    log(`  Getting API key...`);
-    await page.goto(`${BLACKBOX_BASE}/settings`, { waitUntil: 'networkidle', timeout: 30000 }).catch(() => {});
-    await sleep(2000);
-
-    // Also try the API directly
-    let apiKey = '';
-
-    // Try to find API key on settings page
-    apiKey = await page.evaluate(() => {
-      const elements = document.querySelectorAll('code, .api-key, .key, pre, [data-key], input[readonly]');
-      for (const el of elements) {
-        const text = (el.textContent || el.value || '').trim();
-        if (text.length > 20 && text.match(/^[a-zA-Z0-9_-]{20,}$/)) {
-          return text;
-        }
-      }
-      return '';
+    // Step 2: Click Google button
+    log(`  Looking for Google login button...`);
+    const googleBtn = await page.evaluateHandle(() => {
+      const btns = Array.from(document.querySelectorAll('button'));
+      return btns.find(b => (b.textContent || '').trim() === 'Google') || null;
     });
 
-    // If no key found, try creating one
-    if (!apiKey) {
-      apiKey = await this.createApiKey(page);
+    if (googleBtn && googleBtn.asElement()) {
+      log(`  Found Google button, clicking...`);
+      await googleBtn.click();
+      await sleep(3000);
+    } else {
+      throw new Error('Google button not found on Blackbox.ai login page');
     }
 
-    // Try getting key from API endpoints
-    if (!apiKey) {
-      apiKey = await this.fetchApiKeyFromAPI(page);
+    // Step 3: Google OAuth login
+    log(`  Completing Google OAuth...`);
+    try {
+      await page.waitForSelector('input[type="email"], #identifierId', { timeout: 15000 });
+    } catch {}
+    const isGoogleLogin = await page.$('input[type="email"], #identifierId');
+    if (isGoogleLogin) {
+      await googleLogin(page, email, password);
     }
 
-    if (!apiKey) {
-      throw new Error('Could not obtain API key from Novabox/Blackbox.ai');
+    // Handle consent screens
+    for (let i = 0; i < 5; i++) {
+      const clicked = await page.evaluate(() => {
+        const btns = Array.from(document.querySelectorAll('button'));
+        const btn = btns.find(b => {
+          const t = (b.textContent || '').toLowerCase();
+          return t.includes('continue') || t.includes('allow') || t.includes('accept');
+        });
+        if (btn) { btn.click(); return btn.textContent.trim(); }
+        return null;
+      });
+      if (clicked) await sleep(2000);
+      else break;
     }
 
-    log(`  API key: ${apiKey.substring(0, 15)}...`);
+    await sleep(5000);
 
-    return {
-      success: true,
-      key: `${tempEmail}|${apiKey}`,
-    };
+    // Step 4: Check if logged in
+    const finalUrl = page.url();
+    log(`  Final URL: ${finalUrl}`);
+
+    if (finalUrl.includes('blackbox.ai') && !finalUrl.includes('accounts.google.com')) {
+      log(`  ✅ Blackbox.ai login successful!`);
+
+      // Step 5: Get API key via browser context (use page.evaluate for fetch)
+      log(`  Getting API key via browser context...`);
+      const apiKey = await this.getApiKeyViaBrowser(page, log);
+
+      if (apiKey) {
+        log(`  API key: ${apiKey.substring(0, 15)}...`);
+        return { success: true, key: `${email}|${apiKey}` };
+      }
+
+      throw new Error('Could not get API key from Blackbox.ai');
+    }
+
+    throw new Error(`Blackbox.ai: Login failed. URL: ${finalUrl.substring(0, 100)}`);
   }
 
-  async createApiKey(page) {
+  async getApiKeyViaBrowser(page, log) {
+    // Use page.evaluate to make fetch requests from the browser context
+    // This automatically includes cookies/session
     try {
-      // Navigate to API keys page
-      await page.goto(`${BLACKBOX_BASE}/api-keys`, { waitUntil: 'networkidle', timeout: 15000 }).catch(() => {});
-      await sleep(2000);
+      const result = await page.evaluate(async () => {
+        try {
+          // Try to get existing keys
+          const keysRes = await fetch('/api/keys', { credentials: 'include' });
+          if (keysRes.ok) {
+            const keysData = await keysRes.json();
+            if (keysData.keys && keysData.keys.length > 0) {
+              return keysData.keys[0].key || keysData.keys[0].api_key || keysData.keys[0].value || '';
+            }
+          }
+          
+          // Try alternative endpoints
+          const altRes = await fetch('/api/user/keys', { credentials: 'include' });
+          if (altRes.ok) {
+            const altData = await altRes.json();
+            if (altData.keys && altData.keys.length > 0) {
+              return altData.keys[0].key || altData.keys[0].api_key || altData.keys[0].value || '';
+            }
+          }
 
-      const createBtn = await page.$(
-        'button:has-text("Create"), button:has-text("Generate"), button:has-text("New"), button:has-text("Add")'
-      );
+          // Try creating a new key
+          const createRes = await fetch('/api/keys', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ name: `key-${Date.now()}` }),
+          });
+          if (createRes.ok) {
+            const createData = await createRes.json();
+            return createData.key || createData.api_key || createData.value || '';
+          }
 
-      if (createBtn) {
-        await createBtn.click();
+          return '';
+        } catch (e) {
+          return `error: ${e.message}`;
+        }
+      });
+
+      if (result && !result.startsWith('error:') && result.length > 10) {
+        return result;
+      }
+      log(`  Browser fetch result: ${result || 'empty'}`);
+
+      // Fallback: Navigate to API keys page and scrape
+      log(`  Trying to scrape API keys page...`);
+      for (const path of ['/api-keys', '/settings/api-keys', '/settings', '/dashboard']) {
+        await page.goto(`${BLACKBOX_APP}${path}`, { waitUntil: 'networkidle2', timeout: 15000 }).catch(() => {});
         await sleep(2000);
 
-        // Fill name if needed
-        const nameInput = await page.$('input[name="name"], input[placeholder*="name"]');
-        if (nameInput) {
-          await nameInput.fill(`key-${Date.now()}`);
-          await randomSleep(200, 500);
-        }
-
-        const submitBtn = await page.$('button[type="submit"], button:has-text("Create"), button:has-text("Save")');
-        if (submitBtn) {
-          await submitBtn.click();
-          await sleep(3000);
-        }
-
-        // Extract key
         const key = await page.evaluate(() => {
-          const all = document.querySelectorAll('code, pre, .key, input[readonly], [data-key]');
-          for (const el of all) {
+          // Look for any text that looks like an API key
+          const allText = document.body.innerText;
+          const matches = allText.match(/sk-[a-zA-Z0-9]{20,}/g) || [];
+          if (matches.length > 0) return matches[0];
+          
+          // Look in code/pre elements
+          const els = document.querySelectorAll('code, pre, .key, input[readonly], [data-key]');
+          for (const el of els) {
             const text = (el.textContent || el.value || '').trim();
-            if (text.length > 20) return text;
+            if (text.length > 20 && text.match(/^[a-zA-Z0-9_\-]{20,}$/)) return text;
           }
           return '';
         });
-
         if (key) return key;
       }
-    } catch {
-      // ignore
+
+    } catch (err) {
+      log(`  Error: ${err.message}`);
     }
     return '';
-  }
-
-  async fetchApiKeyFromAPI(page) {
-    return new Promise((resolve) => {
-      let key = '';
-      const handler = async (response) => {
-        try {
-          const url = response.url();
-          if ((url.includes('key') || url.includes('api')) && response.status() >= 200 && response.status() < 300) {
-            const body = await response.json().catch(() => null);
-            if (body) {
-              const possible = body.key || body.api_key || body.apiKey || body.token || body.secret || '';
-              if (typeof possible === 'string' && possible.length > 15) key = possible;
-              // Check nested
-              if (body.keys && Array.isArray(body.keys) && body.keys.length > 0) {
-                key = body.keys[0].key || body.keys[0].api_key || key;
-              }
-            }
-          }
-        } catch {
-          // ignore
-        }
-      };
-
-      page.on('response', handler);
-      // Trigger a page that might return keys
-      page.reload().catch(() => {});
-      setTimeout(() => {
-        page.removeListener('response', handler);
-        resolve(key);
-      }, 10000);
-    });
   }
 }

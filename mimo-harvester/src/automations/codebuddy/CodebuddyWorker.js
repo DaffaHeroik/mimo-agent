@@ -1,175 +1,115 @@
 import BaseWorker from '../base/BaseWorker.js';
 import { sleep, randomSleep } from '../../utils/index.js';
-import fetch from 'node-fetch';
+import { googleLogin } from '../../providers/google/login.js';
 
 const CODEBUDDY_API = 'https://www.codebuddy.ai';
-const GITHUB_DEVICE_URL = 'https://github.com/login/device/code';
-const GITHUB_TOKEN_URL = 'https://github.com/login/oauth/access_token';
 
 export default class CodebuddyWorker extends BaseWorker {
-  get platformName() {
-    return 'codebuddy';
-  }
+  get platformName() { return 'codebuddy'; }
 
   async executeForAccount(account, page, log) {
     const { email, password } = account;
 
-    // Step 1: Initiate device code flow via CodeBuddy API
-    log(`  Initiating device code flow...`);
-    const deviceData = await this.initiateDeviceCode();
-    if (!deviceData.device_code) {
-      throw new Error('Failed to get device code from CodeBuddy');
-    }
-
-    const { device_code, user_code, verification_uri, interval = 5 } = deviceData;
-    log(`  Device code: ${user_code}`);
-    log(`  Verification URI: ${verification_uri}`);
-
-    // Step 2: Navigate to GitHub and authorize
-    log(`  Navigating to GitHub device login...`);
-    await page.goto(verification_uri, { waitUntil: 'networkidle', timeout: 60000 });
-
-    // Enter the user code
-    await page.waitForSelector('#user_code, input[name="user_code"]', { timeout: 15000 });
-    await page.fill('#user_code, input[name="user_code"]', user_code);
-    await randomSleep(500, 1500);
-    await page.click('button[type="submit"], input[type="submit"]');
-
-    // GitHub login if needed
-    await sleep(2000);
-    const needsLogin = await page.$('input[type="email"], input[name="login"]');
-    if (needsLogin) {
-      log(`  Logging into GitHub...`);
-      await this.githubLogin(page, email, password);
-    }
-
-    // Authorize the app
-    await sleep(2000);
-    log(`  Authorizing CodeBuddy app...`);
-    await this.authorizeApp(page);
-
-    // Step 3: Poll for the token
-    log(`  Waiting for GitHub to issue token...`);
-    const oauthToken = await this.pollForToken(device_code, interval);
-    if (!oauthToken) {
-      throw new Error('Failed to get OAuth token');
-    }
-
-    log(`  OAuth token acquired: ${oauthToken.substring(0, 10)}...`);
-
-    // Step 4: Exchange token with CodeBuddy
-    log(`  Exchanging token with CodeBuddy...`);
-    const codebuddyToken = await this.exchangeToken(oauthToken);
-
-    return {
-      success: true,
-      key: `${email}|${codebuddyToken || oauthToken}`,
-    };
-  }
-
-  async initiateDeviceCode() {
-    const res = await fetch(`${CODEBUDDY_API}/auth/github/device`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Device code initiation failed: ${text}`);
-    }
-    return await res.json();
-  }
-
-  async githubLogin(page, email, password) {
-    // Enter email/username
-    await page.waitForSelector('input[name="login"], input[type="email"]', { timeout: 10000 });
-    await page.fill('input[name="login"], input[type="email"]', email);
-    await randomSleep(300, 800);
-
-    // Enter password
-    await page.fill('input[name="password"], input[type="password"]', password);
-    await randomSleep(300, 800);
-
-    // Click sign in
-    await page.click('input[type="submit"][value="Sign in"], button[type="submit"]');
+    // Step 1: Navigate to CodeBuddy LOGIN page (has Keycloak iframe)
+    log(`  Navigating to CodeBuddy login...`);
+    await page.goto(`${CODEBUDDY_API}/login`, { waitUntil: 'networkidle2', timeout: 60000 });
     await sleep(3000);
 
-    // Handle 2FA if present
-    const has2FA = await page.$('input[name="otp"], input[id="otp"], .js-otp-input');
-    if (has2FA) {
-      throw new Error('GitHub 2FA required — cannot automate');
+    // Step 2: Find the Keycloak iframe and click "Sign up with Google" inside it
+    log(`  Looking for Google signup in Keycloak iframe...`);
+    
+    const kcFrame = page.frames().find(f => 
+      f.url().includes('keycloak') || f.url().includes('openid-connect')
+    );
+
+    if (!kcFrame) {
+      throw new Error('Keycloak iframe not found on CodeBuddy login page');
     }
 
-    // Handle any "Verify your account" prompts
-    const verifyBtn = await page.$('button:has-text("Verify"), button:has-text("Continue")');
-    if (verifyBtn && (await verifyBtn.isVisible())) {
-      await verifyBtn.click();
-      await sleep(2000);
-    }
-  }
+    log(`  Found Keycloak iframe: ${kcFrame.url().substring(0, 80)}...`);
 
-  async authorizeApp(page) {
-    // Look for authorize button
-    const selectors = [
-      'button:has-text("Authorize")',
-      'input[value="Authorize"]',
-      '#js-oauth-authorize-btn',
-      'button[type="submit"]',
-    ];
-
-    for (const sel of selectors) {
-      try {
-        const btn = await page.$(sel);
-        if (btn && (await btn.isVisible())) {
-          await btn.click();
-          await sleep(3000);
-          return;
-        }
-      } catch {
-        continue;
-      }
-    }
-
-    // Maybe already authorized
-    await sleep(2000);
-  }
-
-  async pollForToken(deviceCode, interval = 5, maxAttempts = 60) {
-    for (let i = 0; i < maxAttempts; i++) {
-      await sleep(interval * 1000);
-
-      try {
-        const res = await fetch(`${CODEBUDDY_API}/auth/github/token`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ device_code: deviceCode }),
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data.access_token) return data.access_token;
-          if (data.token) return data.token;
-        }
-      } catch {
-        // Continue polling
-      }
-    }
-    return null;
-  }
-
-  async exchangeToken(githubToken) {
-    try {
-      const res = await fetch(`${CODEBUDDY_API}/auth/github/exchange`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ access_token: githubToken }),
+    // Find and click "Sign up with Google" link inside the iframe
+    const googleLinkHref = await kcFrame.evaluate(() => {
+      const links = Array.from(document.querySelectorAll('a'));
+      const google = links.find(l => {
+        const text = (l.textContent || '').toLowerCase();
+        return text.includes('sign up with google') || text.includes('log in with google');
       });
-      if (res.ok) {
-        const data = await res.json();
-        return data.token || data.access_token || data.api_key || githubToken;
-      }
-    } catch {
-      // Fallback to raw GitHub token
+      return google ? google.href : '';
+    });
+
+    if (googleLinkHref) {
+      log(`  Found Google link, navigating...`);
+      await page.goto(googleLinkHref, { waitUntil: 'networkidle2', timeout: 30000 });
+      await sleep(3000);
+    } else {
+      throw new Error('Google link not found in CodeBuddy Keycloak iframe');
     }
-    return githubToken;
+
+    // Step 3: Google OAuth login
+    log(`  Completing Google OAuth...`);
+    const isGoogleLogin = await page.$('input[type="email"]');
+    if (isGoogleLogin) {
+      await googleLogin(page, email, password);
+    }
+
+    await sleep(5000);
+
+    // Step 4: Handle consent
+    try {
+      await page.evaluate(() => {
+        const btns = Array.from(document.querySelectorAll('button'));
+        const btn = btns.find(b => {
+          const t = (b.textContent || '').toLowerCase();
+          return t.includes('allow') || t.includes('authorize') || t.includes('accept') || t.includes('continue');
+        });
+        if (btn) btn.click();
+      });
+      await sleep(3000);
+    } catch {}
+
+    // Step 5: Check result
+    await sleep(3000);
+    const finalUrl = page.url();
+    log(`  Final URL: ${finalUrl}`);
+
+    if (finalUrl.includes('restricted') || finalUrl.includes('unavailable')) {
+      const text = await page.evaluate(() => document.body.innerText).catch(() => '');
+      if (text.includes('Access Restricted') || text.includes('unavailable')) {
+        throw new Error('CodeBuddy: Account Access Restricted (Tencent security)');
+      }
+    }
+
+    // Must be on actual CodeBuddy domain, not still on Google
+    const onCodeBuddy = finalUrl.includes('codebuddy.ai') && !finalUrl.includes('accounts.google.com');
+    if (onCodeBuddy && (finalUrl.includes('dashboard') || finalUrl.includes('app') || finalUrl.includes('workspace') || finalUrl.includes('/login/select') || finalUrl.includes('/register'))) {
+      log(`  ✅ CodeBuddy login successful!`);
+      const token = await this.extractToken(page);
+      return { success: true, key: `${email}|${token || 'no-token'}` };
+    }
+
+    const errorMsg = await page.evaluate(() => {
+      const el = document.querySelector('.error, .alert, [class*="error"], [class*="alert"]');
+      return el ? el.textContent.trim() : '';
+    }).catch(() => '');
+
+    throw new Error(errorMsg || `CodeBuddy: Unexpected state. URL: ${finalUrl}`);
+  }
+
+  async extractToken(page) {
+    try {
+      const token = await page.evaluate(() => {
+        for (const k of ['token','access_token','auth_token','jwt']) {
+          const v = localStorage.getItem(k);
+          if (v && v.length > 10) return v;
+        }
+        return '';
+      });
+      if (token) return token;
+      const cookies = await page.cookies();
+      const c = cookies.find(c => c.name.includes('token') || c.name.includes('auth'));
+      if (c) return c.value;
+    } catch {}
+    return '';
   }
 }
