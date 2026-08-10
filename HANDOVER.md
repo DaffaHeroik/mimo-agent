@@ -1,7 +1,7 @@
 # HANDOVER.md — Import Instructions for New MIMO Agent
 
 ## Baca files ini DULU (dalam urutan):
-1. `MEMORY.md` — Long-term memory (UPDATED 2026-08-10)
+1. `MEMORY.md` — Long-term memory (UPDATED 2026-08-10 16:53)
 2. `memory/2026-08-09.md` — Latest daily log
 3. `memory/2026-08-08.md` — Previous daily log
 4. `memory/2026-08-05.md` — First session log
@@ -15,6 +15,7 @@
 - Bahasa: Mix Indonesia + English
 - Style: Direct, suka automation, sanggup debug lama
 - Goal: Free AI tools untuk coding
+- Preferensi: Instruksi langsung dan praktis, bukan penjelasan panjang
 
 ## Status Terkini (Aug 10, 2026 — Updated)
 

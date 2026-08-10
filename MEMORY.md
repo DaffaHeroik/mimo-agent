@@ -266,6 +266,12 @@ blackboxai/amazon/nova-2-lite
 4. Wait for verification email, extract link, open it
 5. Claim $5 gift, create API key
 
+### Local Device Usage
+- User wants to use TokenHarbor on local dev machine (not just server)
+- Setup guides provided for: Cursor, Cline/Roo Code, Python, Node.js, curl
+- OpenAI-compatible → works with any tool that supports custom base URL
+- Free models need dashboard consent toggle first
+
 ---
 
 ## Core Principles
@@ -277,6 +283,7 @@ Kalau project stuck, terus cari cara sampai dapat. Jangan bilang "gak bisa" atau
 - Kalau 3x coba gagal → ganti approach total, jangan ulang
 - Ambil jalan paling simple, bukan paling canggih
 - Stop & pikir sebelum coding — kadang solusi bukan di code
+- User prefers direct, practical instructions over long explanations
 - Jangan bikin script 100+ baris kalau bisa 20 baris
 
 ---
