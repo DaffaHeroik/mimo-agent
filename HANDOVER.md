@@ -1,7 +1,7 @@
 # HANDOVER.md — Import Instructions for New MIMO Agent
 
 ## Baca files ini DULU (dalam urutan):
-1. `MEMORY.md` — Long-term memory (UPDATED 2026-08-09)
+1. `MEMORY.md` — Long-term memory (UPDATED 2026-08-10)
 2. `memory/2026-08-09.md` — Latest daily log
 3. `memory/2026-08-08.md` — Previous daily log
 4. `memory/2026-08-05.md` — First session log
@@ -16,7 +16,7 @@
 - Style: Direct, suka automation, sanggup debug lama
 - Goal: Free AI tools untuk coding
 
-## Status Terkini (Aug 9, 2026 — Updated)
+## Status Terkini (Aug 10, 2026 — Updated)
 
 ### ✅ Yang Berhasil
 1. **Ollama Cloud** — 6 API keys berhasil di-generate
@@ -25,12 +25,11 @@
 4. **Captcha Solver** — 11 types, port 8877
 5. **TempMail API** — Scraped, inbox check PUBLIC
 6. **IBM Bob** — Google OAuth registration complete (2/2)
-7. **TokenHarbor** — Google OAuth login works, API key flow mapped
+7. **TokenHarbor** — 4 API keys with $5 each, 21+ models, full automation working
 
 ### 🔄 Dalam Progress
 8. **mimo-harvester** — CLI automation tool (Ollama, IBM Bob, Qoder working)
-9. **TokenHarbor** — API key creation needs fix
-10. **Novabox** — Login works, API key page SPA issue
+9. **Novabox** — Login works, API key page SPA issue
 
 ### ❌ Blocked
 11. **CodeBuddy** — Tencent IP block (datacenter)
@@ -67,6 +66,9 @@ echo "start" | python3 grok_register_ttk.py cli
 3. **Ollama radar-challenge** = intermittent anti-bot
 4. **9Router** needs Next.js build from source
 5. **Puppeteer vs Playwright**: `networkidle`→`networkidle2`, `:has-text()`→`evaluateHandle()`, `removeListener()`→`off()`
+6. **agent-browser `fill` vs `type`**: `fill` doesn't trigger React state; use `click` + `type`
+7. **mail.tm pre-creation**: Account must exist BEFORE registration or email bounces
+8. **TokenHarbor**: email/password registration works without CAPTCHA; Google OAuth blocked from datacenter
 
 ## Accounts
 - respati1@bozztirex.us / Daffa112233 (main)

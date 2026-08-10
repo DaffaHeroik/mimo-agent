@@ -70,9 +70,14 @@ Skills yang sudah include di repo ini. Setiap import mimo-agent otomatis dapat s
 
 ### 10. 🏗️ TokenHarbor
 - **Lokasi:** `mimo-harvester/src/automations/tokenharbor/`
-- **Apa:** TokenHarbor.ai automation (Google OAuth + API key)
-- **Invite:** TH-653T-4B6A ($5 free credit)
-- **Status:** Login works, API key creation needs fix
+- **Apa:** TokenHarbor.ai automation (email/password registration + API key)
+- **Invite:** TH-653T-4B6A ($5 free credit per account)
+- **API Base:** `https://tokenharbor.ai/v1/chat/completions` (OpenAI-compatible)
+- **Models:** 21+ (deepseek-v4-flash/pro, claude-sonnet-5, gpt-5.6-*, grok-4.5, kimi-k3, mimo-v2.5-pro, etc.)
+- **Free models:** deepseek-v4-flash:free, kimi-k3:free, mimo-v2.5:free (requires consent toggle)
+- **Status:** ✅ Working — 4 keys harvested, $5 each, full automation via `tokenharbor-harvest-v2.sh`
+- **Key insight:** Google OAuth blocked from datacenter; use email/password registration instead
+- **Key insight:** mail.tm account must be created BEFORE TokenHarbor registration
 
 ---
 

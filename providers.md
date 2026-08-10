@@ -52,10 +52,61 @@ Format: Custom (not OpenAI-compatible)
 5. lestari7@bozztirex.us → a7d6f92f088549c2804888593f612cbb
 6. lestari8@bozztirex.us → 0c0811afa73046d1bc29b1fccbe008e7
 
+## TokenHarbor (21+ Models)
+API Base: https://tokenharbor.ai/v1/chat/completions
+Format: OpenAI-compatible
+Auth: Authorization: Bearer thk_live_***
+Invite: TH-653T-4B6A ($5 free credit per account)
+
+### Working Models:
+| Model | Provider | Type |
+|-------|----------|------|
+| deepseek-v4-flash | DeepSeek | Chat |
+| deepseek-v4-pro | DeepSeek | Chat |
+| claude-sonnet-5 | Anthropic | Chat |
+| claude-opus-5 | Anthropic | Chat |
+| claude-fable-5 | Anthropic | Chat |
+| gpt-5.6-terra | OpenAI | Chat |
+| gpt-5.6-sol | OpenAI | Chat |
+| gpt-5.6-luna | OpenAI | Chat |
+| gemini-3.6-flash | Google | Chat |
+| gemini-3.1-pro-preview | Google | Chat |
+| grok-4.5 | xAI | Chat |
+| kimi-k3 | Moonshot | Chat |
+| mimo-v2.5-pro | Xiaomi | Chat |
+| mimo-v2.5 | Xiaomi | Chat |
+| glm-5.2 | Zhipu | Chat |
+| minimax-m3 | MiniMax | Chat |
+| qwen3.8-max | Alibaba | Chat |
+| deepseek-v4-flash:free | DeepSeek | FREE |
+| kimi-k3:free | Moonshot | FREE |
+| mimo-v2.5:free | Xiaomi | FREE |
+| th-orchestra | TokenHarbor | Router |
+
+### Registration Flow:
+1. Create mail.tm account FIRST (api.mail.tm/accounts)
+2. Get JWT token (api.mail.tm/token)
+3. Register at tokenharbor.ai/login?invite=TH-653T-4B6A
+4. Verify email via mail.tm inbox
+5. Claim $5 gift, create API key
+
+### Free Models Note:
+Free models require consent toggle on dashboard.
+API call returns `free_models_disabled` error if not enabled.
+Enable via dashboard → "Enable free models" button.
+
 ## Usage Example (Blackbox.ai):
 ```bash
 curl https://api.blackbox.ai/v1/chat/completions \
-  -H "Authorization: Bearer sk-yOfkp958vNdU61PzVfxwKA" \
+  -H "Authorization: Bearer sk-***" \
   -H "Content-Type: application/json" \
   -d '{"model":"blackboxai/mistral/codestral","messages":[{"role":"user","content":"Hello"}]}'
+```
+
+## Usage Example (TokenHarbor):
+```bash
+curl https://tokenharbor.ai/v1/chat/completions \
+  -H "Authorization: Bearer thk_live_***" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Hello"}]}'
 ```
