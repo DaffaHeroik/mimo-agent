@@ -8,3 +8,7 @@ __pycache__/
 *.pyc
 cookies.json
 *.png
+node_modules/
+mimo-harvester/node_modules/
+*.png
+*.jpg
