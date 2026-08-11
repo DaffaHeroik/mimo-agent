@@ -12,3 +12,4 @@ node_modules/
 mimo-harvester/node_modules/
 *.png
 *.jpg
+package-lock.json
