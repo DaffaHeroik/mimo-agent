@@ -31,10 +31,13 @@
 7. **TokenHarbor (bekri.site)** — 3 keys (muni1-3), $5 each
 
 ### 🔄 Pending — Jalankan dari Lokal
-8. **TokenHarbor (bekri.site muni4-10)** — Script ready: `tokenharbor-local/register.js`
+8. **TokenHarbor (bekri.site muni4-10)** — Script ready: `tokenharbor-local/start.js`
    - Server IP kena rate limit
    - Proxy juga gak bisa (datacenter IP blocked)
    - Harus dari IP rumah/ISP
+9. **Webshare Proxies** — Script ready: `webshare-harvester/start.js`
+   - Register via Google OAuth, extract 10 proxies per akun
+   - 7 akun × 10 proxies = 70 proxies total
 
 ### ❌ Blocked
 9. **CodeBuddy** — Tencent IP block (datacenter)

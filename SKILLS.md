@@ -83,8 +83,16 @@ Skills yang sudah include di repo ini. Setiap import mimo-agent otomatis dapat s
 - **Lokasi:** `tokenharbor-local/`
 - **Apa:** Batch registration script yang harus dijalankan dari komputer lokal
 - **Why:** Server IP kena rate limit, proxy juga gak bisa (datacenter IP blocked)
-- **Run:** `cd tokenharbor-local && npm install && node register.js`
+- **Run:** `cd tokenharbor-local && npm install && node start.js`
 - **Akun:** muni4-10@bekri.site
+- **Status:** ⏳ Menunggu dijalankan dari IP rumah
+
+### 12. 🌐 Webshare Proxy Harvester
+- **Lokasi:** `webshare-harvester/`
+- **Apa:** Register Webshare akun via Google OAuth, extract 10 free proxies per akun
+- **Run:** `cd webshare-harvester && npm install && node start.js`
+- **Akun:** muni4-10@bekri.site
+- **Output:** proxies.txt (70 proxies total)
 - **Status:** ⏳ Menunggu dijalankan dari IP rumah
 
 ---

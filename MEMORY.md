@@ -436,6 +436,7 @@ muni3@bekri.site|thk_live_3MKv4vTaCwk4IZnvylPeSF6YIgVp_9PAkw5uppuHG4W_LcOA8cWIc_
 - **Local script ready:** `tokenharbor-local/register.js`
 
 ### Next Steps
-1. User runs `tokenharbor-local/register.js` from home computer
+1. User runs `tokenharbor-local/start.js` from home computer
 2. Should register muni4-muni10 successfully
 3. Total expected: 10 API keys with $5 each ($50 total credit)
+4. User runs `webshare-harvester/start.js` to get 70 proxies (7 accounts × 10 proxies)
