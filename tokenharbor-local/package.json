@@ -1,9 +1,9 @@
 {
   "name": "tokenharbor-local",
-  "version": "1.0.0",
-  "description": "TokenHarbor batch registration - run from local machine",
+  "version": "2.0.0",
+  "description": "TokenHarbor auto-register — tinggal isi accounts.txt, jalankan, selesai",
   "scripts": {
-    "start": "node register.js"
+    "start": "node start.js"
   },
   "dependencies": {
     "puppeteer": "^25.5.0",

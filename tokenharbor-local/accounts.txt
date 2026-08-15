@@ -1,0 +1,19 @@
+# TokenHarbor Accounts
+# Format: email|password|google_password
+# Password minimal 12 karakter (TokenHarbor requirement)
+# Google password = password Gmail/Google Workspace (bisa beda)
+# Kalau sama, cukup tulis 2 kolom aja: email|password
+#
+# Contoh:
+# user@gmail.com|MyPass12345678|MyGmailPass123
+# user2@domain.com|MyPass12345678
+#
+# Baris yang diawali # akan di-skip
+
+muni4@bekri.site|Daffa112233!|Daffa112233
+muni5@bekri.site|Daffa112233!|Daffa112233
+muni6@bekri.site|Daffa112233!|Daffa112233
+muni7@bekri.site|Daffa112233!|Daffa112233
+muni8@bekri.site|Daffa112233!|Daffa112233
+muni9@bekri.site|Daffa112233!|Daffa112233
+muni10@bekri.site|Daffa112233!|Daffa112233

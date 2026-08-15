@@ -1,64 +1,114 @@
-# TokenHarbor Batch Registration — Local
+# TokenHarbor Auto-Register
 
-Register 7 akun TokenHarbor (muni4-muni10) dari komputer lokal.
-
-## Kenapa Lokal?
-
-Server kena rate limit "Too many sign-ups from this network". Dari IP rumah/ISP, harusnya aman.
+Tinggal isi `accounts.txt`, jalankan, selesai. Dapat API key + $5 free credit per akun.
 
 ## Cara Pakai
 
 ```bash
-# 1. Install dependencies
+# 1. Install
 npm install
 
-# 2. Jalankan
-node register.js
+# 2. Edit accounts.txt (sudah ada template)
 
-# 3. Tunggu (sekitar 2-3 menit per akun)
-# 4. Hasil di: results.txt
+# 3. Jalankan
+node start.js
 ```
 
-## Yang Dilakukan Script
+## Format accounts.txt
 
-Setiap akun:
-1. Register di TokenHarbor (email/password)
-2. Buka Gmail → ambil verification email
-3. Klik verify link
-4. Login ke TokenHarbor
-5. Buat API key
-
-## Konfigurasi
-
-Edit bagian atas `register.js`:
-
-```javascript
-const ACCOUNTS = ['muni4@bekri.site', ...];  // Email yang mau di-register
-const PASSWORD = 'Daffa112233!';              // Password TokenHarbor (min 12 char)
-const GOOGLE_PASSWORD = 'Daffa112233';        // Password Google/Gmail
-const INVITE_CODE = 'TH-653T-4B6A';           // Invite code ($5 free credit)
 ```
+email@domain.com|password|google_password
+```
+
+- **password** → password TokenHarbor (minimal 12 karakter)
+- **google_password** → password Gmail/Google Workspace (bisa beda)
+- Kalau sama, cukup 2 kolom: `email|password`
+- Baris `#` di-skip
+
+### Contoh:
+
+```
+user@gmail.com|MyPass12345678|MyGmailPass123
+user2@domain.com|MyPass12345678
+```
+
+## Apa yang Dilakukan
+
+Setiap akun (otomatis):
+
+1. **Register** di TokenHarbor (email + password + invite code)
+2. **Buka Gmail** → cari email verifikasi dari TokenHarbor
+3. **Klik verify link** dari email
+4. **Login** ke TokenHarbor
+5. **Buat API key** + enable free models
 
 ## Output
 
+### Console
+
 ```
-results.txt:
-muni1@bekri.site|thk_live_XXX...
-muni2@bekri.site|thk_live_XXX...
-...
+[14:32:01] Accounts: 7 | Already done: 0 | Sisa: 7
+──────────────────────────────────────────────────
+[14:32:01] ▶ muni4@bekri.site
+[14:32:05]   [1/5] Register...
+[14:32:13]   ✅ Registered
+[14:32:14]   [2/5] Gmail...
+[14:32:35]   ✅ Verify link ditemukan
+[14:32:36]   [3/5] Verify...
+[14:32:41]   ✅ Verified
+[14:32:42]   [4/5] Login...
+[14:32:50]   ✅ Logged in
+[14:32:51]   [5/5] API Key...
+[14:33:05]   ✅ KEY: thk_live_XXX...
+
+══════════════════════════════════════════════════
+  SELESAI
+══════════════════════════════════════════════════
+  ✅ Berhasil: 7
+  ❌ Gagal: 0
+  📄 Hasil: results.txt
+```
+
+### results.txt
+
+```
+muni4@bekri.site|thk_live_XXX...
+muni5@bekri.site|thk_live_XXX...
+```
+
+## Resume / Re-run
+
+Script otomatis skip akun yang sudah ada di `results.txt`. Kalau gagal di tengah, jalankan lagi — lanjut dari akun terakhir.
+
+## Pakai API Key
+
+```bash
+# Test
+curl https://tokenharbor.ai/v1/chat/completions \
+  -H "Authorization: Bearer thk_live_XXX..." \
+  -H "Content-Type: application/json" \
+  -d '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Hello"}]}'
+
+# Free models (perlu enable di dashboard dulu):
+# - deepseek-v4-flash:free
+# - kimi-k3:free
+# - mimo-v2.5:free
 ```
 
 ## Troubleshooting
 
-- **"Too many sign-ups"** → Ganti jaringan (VPN/mobile hotspot) atau tunggu 1 jam
-- **Email not found** → Cek spam folder, atau tunggu lebih lama
-- **Chrome not found** → Install Chrome/Chromium, atau edit path di script
+| Error | Solusi |
+|-------|--------|
+| "Too many sign-ups" | Tunggu 1 jam atau ganti jaringan (VPN/mobile hotspot) |
+| "Email not found" | Tunggu lebih lama, atau cek spam folder |
+| "Chrome not found" | Puppeteer auto-download Chrome. Kalau gagal: `npx puppeteer install chrome` |
+| Login gagal | Cek password di accounts.txt |
 
-## API Usage
+## Kenapa Harus Lokal?
 
-```bash
-curl https://tokenharbor.ai/v1/chat/completions \
-  -H "Authorization: Bearer thk_live_XXX" \
-  -H "Content-Type: application/json" \
-  -d '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Hello"}]}'
-```
+Server/VPS IP (datacenter) kena rate limit TokenHarbor:
+> "Too many sign-ups from this network"
+
+Proxy juga gak bisa — TokenHarbor block semua IP datacenter.
+
+Dari IP rumah/ISP (IndiTel, Telkomsel, dll) harusnya aman.
