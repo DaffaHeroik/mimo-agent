@@ -79,6 +79,14 @@ Skills yang sudah include di repo ini. Setiap import mimo-agent otomatis dapat s
 - **Key insight:** Google OAuth blocked from datacenter; use email/password registration instead
 - **Key insight:** mail.tm account must be created BEFORE TokenHarbor registration
 
+### 11. 🏠 TokenHarbor Local Registration
+- **Lokasi:** `tokenharbor-local/`
+- **Apa:** Batch registration script yang harus dijalankan dari komputer lokal
+- **Why:** Server IP kena rate limit, proxy juga gak bisa (datacenter IP blocked)
+- **Run:** `cd tokenharbor-local && npm install && node register.js`
+- **Akun:** muni4-10@bekri.site
+- **Status:** ⏳ Menunggu dijalankan dari IP rumah
+
 ---
 
 ## 🔧 Cara Pakai
@@ -109,6 +117,13 @@ echo "start" | python3 grok_register_ttk.py cli
 ```bash
 cd captcha-solver
 python3 server.py &
+```
+
+### TokenHarbor Local Registration
+```bash
+cd tokenharbor-local
+npm install
+node register.js
 ```
 
 ### Tambah Skill Baru

@@ -58,6 +58,17 @@ Format: OpenAI-compatible
 Auth: Authorization: Bearer thk_live_***
 Invite: TH-653T-4B6A ($5 free credit per account)
 
+### API Keys (bekri.site — Aug 15):
+1. muni1@bekri.site → thk_live_XXf1Dss3VEj3QjuB-9SSZ_Bc-waBhvSsKxbhdRPfVzXjvfVZPMlbEiaEsSTxWHxV
+2. muni2@bekri.site → thk_live_8DFUzvnnQEN_N9E0Ott94LSiTZHOZaUDrrlU_WQp164SPPWIxjIhrosWiP6uXmBK
+3. muni3@bekri.site → thk_live_3MKv4vTaCwk4IZnvylPeSF6YIgVp_9PAkw5uppuHG4W_LcOA8cWIc_ci9zqmGQCV
+
+### API Keys (bozztirex.us — Aug 10):
+4 keys available (from previous session)
+
+### Pending (muni4-10@bekri.site):
+Run `tokenharbor-local/register.js` from home computer
+
 ### Working Models:
 | Model | Provider | Type |
 |-------|----------|------|

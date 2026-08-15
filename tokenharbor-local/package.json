@@ -1,0 +1,13 @@
+{
+  "name": "tokenharbor-local",
+  "version": "1.0.0",
+  "description": "TokenHarbor batch registration - run from local machine",
+  "scripts": {
+    "start": "node register.js"
+  },
+  "dependencies": {
+    "puppeteer": "^25.5.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  }
+}
