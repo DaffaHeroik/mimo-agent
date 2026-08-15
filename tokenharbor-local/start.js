@@ -29,11 +29,15 @@ const RESULTS_FILE = path.join(__dirname, 'results.txt');
 const ACCOUNTS_FILE = path.join(__dirname, 'accounts.txt');
 // ====================================
 
+// ============== PASSWORD (HARDCODED) ==============
+const TH_PASSWORD = '***';  // TokenHarbor password (min 12 char)
+// ==================================================
+
 function loadAccounts() {
   if (!fs.existsSync(ACCOUNTS_FILE)) {
     console.error('❌ accounts.txt tidak ditemukan!');
     console.error('   Buat file accounts.txt dengan format:');
-    console.error('   email@domain.com|password|google_password');
+    console.error('   email|google_password');
     process.exit(1);
   }
 
@@ -44,15 +48,10 @@ function loadAccounts() {
 
   return lines.map(line => {
     const parts = line.split('|');
-    if (parts.length < 2) {
-      console.error(`❌ Format salah: ${line}`);
-      console.error('   Format: email|password|google_password');
-      process.exit(1);
-    }
     return {
       email: parts[0].trim(),
-      password: parts[1].trim(),
-      googlePassword: (parts[2] || parts[1]).trim(), // fallback ke password utama
+      password: TH_PASSWORD,
+      googlePassword: (parts[1] || TH_PASSWORD).trim(),
     };
   });
 }

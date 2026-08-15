@@ -17,19 +17,21 @@ node start.js
 ## Format accounts.txt
 
 ```
-email@domain.com|password|google_password
+email@domain.com|google_password
 ```
 
-- **password** → password TokenHarbor (minimal 12 karakter)
-- **google_password** → password Gmail/Google Workspace (bisa beda)
-- Kalau sama, cukup 2 kolom: `email|password`
+- Password TokenHarbor sudah di-hardcode di script (`Daffa112233!`)
+- **google_password** → password Gmail/Google Workspace
+- Kalau google password sama semua, cukup: `email` aja
 - Baris `#` di-skip
 
 ### Contoh:
 
 ```
-user@gmail.com|MyPass12345678|MyGmailPass123
-user2@domain.com|MyPass12345678
+user@gmail.com|MyGmailPass123
+user2@domain.com|MyGmailPass123
+# atau kalau sama:
+user3@gmail.com
 ```
 
 ## Apa yang Dilakukan
