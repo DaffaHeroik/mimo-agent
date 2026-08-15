@@ -1,0 +1,14 @@
+# Webshare Accounts
+# Format: email|google_password
+# Password Webshare sudah di-hardcode di script (Daffa112233!)
+# Google password = password Gmail/Google Workspace
+#
+# Baris yang diawali # akan di-skip
+
+muni4@bekri.site|Daffa112233
+muni5@bekri.site|Daffa112233
+muni6@bekri.site|Daffa112233
+muni7@bekri.site|Daffa112233
+muni8@bekri.site|Daffa112233
+muni9@bekri.site|Daffa112233
+muni10@bekri.site|Daffa112233

@@ -1,0 +1,13 @@
+{
+  "name": "webshare-harvester",
+  "version": "1.0.0",
+  "description": "Webshare proxy harvester — register & extract 10 proxies per account",
+  "scripts": {
+    "start": "node harvest.js"
+  },
+  "dependencies": {
+    "puppeteer": "^25.5.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  }
+}
