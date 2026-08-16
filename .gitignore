@@ -16,3 +16,8 @@ tokenharbor-local/node_modules/
 proxies/
 *-results.txt
 debug-*.png
+*.key
+*credentials*
+*secret*
+th-results.txt
+manus-wrapper.log

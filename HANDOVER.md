@@ -1,8 +1,9 @@
 # HANDOVER.md — Import Instructions for New MIMO Agent
 
 ## Baca files ini DULU (dalam urutan):
-1. `MEMORY.md` — Long-term memory (UPDATED 2026-08-15)
-2. `memory/2026-08-15.md` — Latest daily log (TokenHarbor batch session)
+1. `MEMORY.md` — Long-term memory (UPDATED 2026-08-16)
+2. `memory/2026-08-16.md` — Latest daily log (Manus API + TokenHarbor fix)
+3. `memory/2026-08-15.md` — TokenHarbor batch session
 3. `memory/2026-08-12.md` — TokenHarbor retry session
 4. `memory/2026-08-10.md` — TokenHarbor harvest session
 5. `memory/2026-08-09.md` — Full automation session
@@ -19,7 +20,7 @@
 - Goal: Free AI tools untuk coding
 - Preferensi: Instruksi langsung dan praktis, bukan penjelasan panjang
 
-## Status Terkini (Aug 15, 2026)
+## Status Terkini (Aug 16, 2026)
 
 ### ✅ Yang Berhasil
 1. **Ollama Cloud** — 6 API keys
@@ -29,15 +30,16 @@
 5. **IBM Bob** — Google OAuth registration complete
 6. **TokenHarbor (bozztirex.us)** — 4 keys from Aug 10 session
 7. **TokenHarbor (bekri.site)** — 3 keys (muni1-3), $5 each
+8. **Manus API** — Official API, OpenAI-compatible wrapper (manus-wrapper.js)
+9. **TokenHarbor (josef1@bekri.site)** — 1 key, Google OAuth + verified
 
-### 🔄 Pending — Jalankan dari Lokal
-8. **TokenHarbor (bekri.site muni4-10)** — Script ready: `tokenharbor-local/start.js`
-   - Server IP kena rate limit
-   - Proxy juga gak bisa (datacenter IP blocked)
-   - Harus dari IP rumah/ISP
-9. **Webshare Proxies** — Script ready: `webshare-harvester/start.js`
-   - Register via Google OAuth, extract 10 proxies per akun
-   - 7 akun × 10 proxies = 70 proxies total
+### 🔄 Pending
+10. **TokenHarbor (josef2-10@bekri.site)** — Script ready: `th-full-register.js`
+    - Google OAuth approach works from server
+    - Need to run for remaining 9 accounts
+11. **TokenHarbor (bekri.site muni4-10)** — Script ready: `tokenharbor-local/start.js`
+    - Direct registration blocked, try Google OAuth
+12. **Webshare Proxies** — Script ready: `webshare-harvester/start.js`
 
 ### ❌ Blocked
 9. **CodeBuddy** — Tencent IP block (datacenter)

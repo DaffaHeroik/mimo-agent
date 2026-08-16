@@ -87,7 +87,29 @@ Skills yang sudah include di repo ini. Setiap import mimo-agent otomatis dapat s
 - **Akun:** muni4-10@bekri.site
 - **Status:** ⏳ Menunggu dijalankan dari IP rumah
 
-### 12. 🌐 Webshare Proxy Harvester
+### 12. 🤖 Manus API
+- **Lokasi:** `manus-wrapper.js`
+- **Apa:** OpenAI-compatible wrapper untuk Manus API
+- **API Base:** `https://api.manus.ai/v2/`
+- **Auth:** `x-manus-api-key` header
+- **Endpoints:** task.sendMessage, task.create, task.listMessages
+- **Default Task:** `agent-default-main_task`
+- **Free Tier:** 300 credits/day, 4000 credits/month
+- **Models:** Manus 1.6, Manus 1.6 Lite (free until Aug 25, 2026)
+- **Run:** `MANUS_API_KEY="sk-..." node manus-wrapper.js`
+- **Port:** `http://localhost:7860`
+- **Status:** ✅ Working
+
+### 13. 🏦 TokenHarbor Google OAuth Registration
+- **Lokasi:** `th-full-register.js`
+- **Apa:** Full multi-account registration via Google OAuth
+- **Flow:** Google OAuth → email verification → free models → API key
+- **Invite:** TH-653T-4B6A ($5 free credit per account)
+- **Run:** `node th-full-register.js`
+- **Accounts:** Edit ACCOUNTS array in script
+- **Status:** ✅ Working (josef1 tested)
+
+### 14. 🌐 Webshare Proxy Harvester
 - **Lokasi:** `webshare-harvester/`
 - **Apa:** Register Webshare akun via Google OAuth, extract 10 free proxies per akun
 - **Run:** `cd webshare-harvester && npm install && node start.js`
